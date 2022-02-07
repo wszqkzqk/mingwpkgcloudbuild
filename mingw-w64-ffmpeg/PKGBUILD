@@ -63,7 +63,7 @@ source=(https://ffmpeg.org/releases/${_realname}-${pkgver}.tar.xz
         "0005-Win32-Add-path-relocation-to-frei0r-plugins-search.patch"
         "0001-get_cabac_inline_x86-Dont-inline-if-32-bit-clang-on-windows.patch")
 validpgpkeys=('FCF986EA15E6E293A5644F10B4322F04D67658D8')
-sha256sums=('eadbad9e9ab30b25f5520fbfde99fae4a92a1ae3c0257a8d68569a4651e30e02'
+sha256sums=('51e919f7d205062c0fd4fae6243a84850391115104ccf1efc451733bc0ac7298'
             '6f1016e6647b6340fdceefaf24ff391f4c0ea3c785ddf70c9794ca2356797888'
             '6ce4dcf4ef6c4bce48dbcb6f1b5226baf79f74ac76719fb0c06419a0aadb37a3'
             '63aa930515c10484a68cb8940f453cba01cf3f5d0d72c86b0bc03777acb704ba'
