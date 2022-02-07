@@ -122,3 +122,11 @@ jobs:
         shell: msys2 {0}
         run: |
           python .ci/ci-check.py
+
+#添加一个上传操作
+      - uses: ncipollo/release-action@v1.7.3
+        with:
+          allowUpdates: true
+          tag: "packages"
+          artifacts: "./*/*.zst"
+          token: ${{ secrets.GITHUB_TOKEN }}
