@@ -23,6 +23,7 @@ depends=("${MINGW_PACKAGE_PREFIX}-aom"
          "${MINGW_PACKAGE_PREFIX}-gnutls"
          "${MINGW_PACKAGE_PREFIX}-gsm"
          "${MINGW_PACKAGE_PREFIX}-lame"
+         "${MINGW_PACKAGE_PREFIX}-ladspa-sdk"
          "${MINGW_PACKAGE_PREFIX}-libass"
          "${MINGW_PACKAGE_PREFIX}-libbluray"
          "${MINGW_PACKAGE_PREFIX}-libcaca"
@@ -94,6 +95,7 @@ build() {
     --enable-gnutls
     --enable-gpl
     --enable-iconv
+    --enable-ladspa
     --enable-libaom
     --enable-libass
     --enable-libbluray
