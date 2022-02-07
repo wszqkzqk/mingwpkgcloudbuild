@@ -127,6 +127,6 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          tag: "packages"
-          artifacts: "*.pkg.tar.*"
+          tag: packages
+          artifacts: C:/_/artifacts/*.pkg.tar.*
           token: ${{ secrets.GITHUB_TOKEN }}
