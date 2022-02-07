@@ -29,6 +29,8 @@ test -z "${packages}" && success 'No changes in package recipes'
 message 'Building packages' "${packages[@]}"
 execute 'Approving recipe quality' check_recipe_quality
 
+execute 'Update hash info' updpkgsums   #wszqkzqk: Automatically update hash info
+
 message 'Adding an empty local repository'
 repo-add $PWD/artifacts/ci.db.tar.gz
 sed -i '1s|^|[ci]\nServer = file://'"$PWD"'/artifacts/\nSigLevel = Never\n|' /etc/pacman.conf
