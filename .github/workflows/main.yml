@@ -124,7 +124,7 @@ jobs:
           python .ci/ci-check.py
 
 #添加一个上传操作
-      - uses: ncipollo/release-action@v1.7.3
+      - uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
           tag: "packages"
