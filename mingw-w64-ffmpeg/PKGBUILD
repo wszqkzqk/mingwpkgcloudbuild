@@ -27,6 +27,8 @@ depends=("${MINGW_PACKAGE_PREFIX}-aom"
          "${MINGW_PACKAGE_PREFIX}-libbluray"
          "${MINGW_PACKAGE_PREFIX}-libcaca"
          "${MINGW_PACKAGE_PREFIX}-libexif"
+         "${MINGW_PACKAGE_PREFIX}-libgme"
+         "${MINGW_PACKAGE_PREFIX}-libiconv"
          "${MINGW_PACKAGE_PREFIX}-libmfx"
          "${MINGW_PACKAGE_PREFIX}-libmodplug"
          "${MINGW_PACKAGE_PREFIX}-libsoxr"
@@ -61,7 +63,7 @@ source=(https://ffmpeg.org/releases/${_realname}-${pkgver}.tar.xz{,.asc}
         "pathtools.c"
         "pathtools.h")
 validpgpkeys=('FCF986EA15E6E293A5644F10B4322F04D67658D8')
-sha256sums=('eadbad9e9ab30b25f5520fbfde99fae4a92a1ae3c0257a8d68569a4651e30e02'
+sha256sums=('unknownunknownunknownunknownunknownunknownunknownunknownunknown0'
             'SKIP'
             '6f1016e6647b6340fdceefaf24ff391f4c0ea3c785ddf70c9794ca2356797888'
             '6ce4dcf4ef6c4bce48dbcb6f1b5226baf79f74ac76719fb0c06419a0aadb37a3')
@@ -91,6 +93,7 @@ build() {
     --enable-fontconfig
     --enable-gnutls
     --enable-gpl
+    --enable-iconv
     --enable-libaom
     --enable-libass
     --enable-libbluray
@@ -98,6 +101,7 @@ build() {
     --enable-libcelt
     --enable-libdav1d
     --enable-libfreetype
+    --enable-libgme
     --enable-libgsm
     --enable-libmfx
     --enable-libmodplug
