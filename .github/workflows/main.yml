@@ -128,5 +128,5 @@ jobs:
         with:
           allowUpdates: true
           tag: "packages"
-          artifacts: "./*/*/*.pkg.tar.*"
+          artifacts: "*.pkg.tar.*"
           token: ${{ secrets.GITHUB_TOKEN }}
