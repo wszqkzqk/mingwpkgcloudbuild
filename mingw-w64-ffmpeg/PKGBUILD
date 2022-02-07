@@ -178,7 +178,7 @@ build() {
         cat config.log
         exit 1
       }
-    make -j 16 VERBOSE=1
+    make VERBOSE=1
   done
 }
 
@@ -187,14 +187,14 @@ check() {
     cd "${srcdir}/build-${MINGW_CHOST}${_variant}"
     # workaround for conflict with SDL main(), use it if you have SDL installed
     # make check CC_C="-c -Umain"
-    make -j 16 check VERBOSE=1 || true
+    make check VERBOSE=1 || true
   done
 }
 
 package() {
   for _variant in -static -shared; do
     cd "${srcdir}/build-${MINGW_CHOST}${_variant}"
-    make -j 16 DESTDIR="${pkgdir}" install
+    make DESTDIR="${pkgdir}" install
   done
   
   rm -f ${pkgdir}/${MINGW_PREFIX}/lib/*.def
