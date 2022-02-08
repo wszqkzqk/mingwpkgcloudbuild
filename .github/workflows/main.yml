@@ -123,8 +123,11 @@ jobs:
         run: |
           python .ci/ci-check.py
 
-    #添加一个发布操作
-    release:
+  #添加一个发布操作
+  release:
+    needs: [build]
+    runs-on: windows-2022
+    steps:
       - uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
