@@ -123,7 +123,8 @@ jobs:
         run: |
           python .ci/ci-check.py
 
-#添加一个上传操作
+    #添加一个发布操作
+    release:
       - uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
