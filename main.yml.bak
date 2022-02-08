@@ -449,47 +449,53 @@ jobs:
           python .ci/ci-check.py
 
   #添加发布操作
-  release:
+  release-clang32:
+    needs: [build-clang32]
     runs-on: windows-2022
     steps:
       - uses: ncipollo/release-action@v1
         with:
-          needs: [build-clang32]
           allowUpdates: true
           tag: clang32
           artifacts: C:/_/artifacts/mingw-w64-clang-i686*.pkg.tar.*
           token: ${{ secrets.GITHUB_TOKEN }}
+  release-clang64:
+    needs: [build-clang64]
+    runs-on: windows-2022
+    steps:
       - uses: ncipollo/release-action@v1
         with:
-          needs: [build-clang64]
           allowUpdates: true
           tag: clang64
           artifacts: C:/_/artifacts/mingw-w64-clang-x86_64*.pkg.tar.*
           token: ${{ secrets.GITHUB_TOKEN }}
+  release-mingw32:
+    needs: [build-mingw32]
+    runs-on: windows-2022
+    steps:
       - uses: ncipollo/release-action@v1
         with:
-          needs: [build-mingw32]
           allowUpdates: true
           tag: mingw32
           artifacts: C:/_/artifacts/mingw-w64-i686*.pkg.tar.*
           token: ${{ secrets.GITHUB_TOKEN }}
+  release-mingw64:
+    needs: [build-mingw64, check-mingw64]
+    runs-on: windows-2022
+    steps:
       - uses: ncipollo/release-action@v1
         with:
-          needs: [build-mingw64]
           allowUpdates: true
           tag: mingw64
           artifacts: C:/_/artifacts/mingw-w64-x86_64*.pkg.tar.*
           token: ${{ secrets.GITHUB_TOKEN }}
+  release-ucrt64:
+    needs: [build-ucrt64]
+    runs-on: windows-2022
+    steps:
       - uses: ncipollo/release-action@v1
         with:
-          needs: [build-ucrt64]
           allowUpdates: true
           tag: ucrt64
           artifacts: C:/_/artifacts/mingw-w64-ucrt-x86_64*.pkg.tar.*
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: ncipollo/release-action@v1
-        with:
-          allowUpdates: true
-          tag: all
-          artifacts: C:/_/artifacts/*.pkg.tar.*
           token: ${{ secrets.GITHUB_TOKEN }}
