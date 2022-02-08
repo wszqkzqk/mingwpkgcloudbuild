@@ -105,8 +105,10 @@ jobs:
       - uses: actions/download-artifact@v2
         continue-on-error: true
         with:
-          name: Display structure of downloaded files
           path: C:/_/artifacts
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: C:/_/artifacts
       - name: Check whether to Run
         id: check-run
         run: |
@@ -212,11 +214,10 @@ jobs:
       - uses: actions/download-artifact@v2
         continue-on-error: true
         with:
-          name: Display structure of downloaded files
           path: C:/_/artifacts
       - uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
           tag: all
-          artifacts: C:/_/artifacts/*.pkg.tar.*
+          artifacts: C:/_/artifacts/*/*.pkg.tar.*
           token: ${{ secrets.GITHUB_TOKEN }}
