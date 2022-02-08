@@ -125,7 +125,7 @@ jobs:
 
   #添加一个发布操作
   release:
-    needs: [build]
+    needs: [build, check]
     runs-on: windows-2022
     steps:
       - uses: ncipollo/release-action@v1
