@@ -181,6 +181,6 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          tag: ucrt64
+          tag: all
           artifacts: C:/_/artifacts/*.pkg.tar.*
           token: ${{ secrets.GITHUB_TOKEN }}
