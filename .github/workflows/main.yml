@@ -123,7 +123,7 @@ jobs:
         run: |
           python .ci/ci-check.py
 
-  #添加一个发布操作
+  #添加发布操作
   release:
     needs: [build, check]
     runs-on: windows-2022
@@ -133,4 +133,34 @@ jobs:
           allowUpdates: true
           tag: packages
           artifacts: C:/_/artifacts/*.pkg.tar.*
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          tag: clang32
+          artifacts: C:/_/artifacts/mingw-w64-clang-i686*.pkg.tar.*
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          tag: clang64
+          artifacts: C:/_/artifacts/mingw-w64-clang-x86_64*.pkg.tar.*
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          tag: mingw32
+          artifacts: C:/_/artifacts/mingw-w64-i686*.pkg.tar.*
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          tag: mingw64
+          artifacts: C:/_/artifacts/mingw-w64-x86_64*.pkg.tar.*
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          tag: ucrt64
+          artifacts: C:/_/artifacts/mingw-w64-ucrt-x86_64*.pkg.tar.*
           token: ${{ secrets.GITHUB_TOKEN }}
