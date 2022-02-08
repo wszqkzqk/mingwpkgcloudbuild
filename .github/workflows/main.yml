@@ -105,7 +105,7 @@ jobs:
       - uses: actions/download-artifact@v2
         continue-on-error: true
         with:
-          name: MINGW64-packages
+          name: Display structure of downloaded files
           path: C:/_/artifacts
       - name: Check whether to Run
         id: check-run
@@ -128,56 +128,92 @@ jobs:
     needs: [build, check]
     runs-on: windows-2022
     steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        continue-on-error: true
+        with:
+          name: CLANG32-packages
+          path: C:/_/artifacts
       - uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
           tag: clang32
-          artifacts: C:/_/artifacts/mingw-w64-clang-i686*.pkg.tar.*
+          artifacts: C:/_/artifacts/*.pkg.tar.*
           token: ${{ secrets.GITHUB_TOKEN }}
   release-clang64:
     needs: [build, check]
     runs-on: windows-2022
     steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        continue-on-error: true
+        with:
+          name: CLANG64-packages
+          path: C:/_/artifacts
       - uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
           tag: clang64
-          artifacts: C:/_/artifacts/mingw-w64-clang-x86_64*.pkg.tar.*
+          artifacts: C:/_/artifacts/*.pkg.tar.*
           token: ${{ secrets.GITHUB_TOKEN }}
   release-mingw32:
     needs: [build, check]
     runs-on: windows-2022
     steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        continue-on-error: true
+        with:
+          name: MINGW32-packages
+          path: C:/_/artifacts
       - uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
           tag: mingw32
-          artifacts: C:/_/artifacts/mingw-w64-i686*.pkg.tar.*
+          artifacts: C:/_/artifacts/*.pkg.tar.*
           token: ${{ secrets.GITHUB_TOKEN }}
   release-mingw64:
     needs: [build, check]
     runs-on: windows-2022
     steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        continue-on-error: true
+        with:
+          name: MINGW64-packages
+          path: C:/_/artifacts
       - uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
           tag: mingw64
-          artifacts: C:/_/artifacts/mingw-w64-x86_64*.pkg.tar.*
+          artifacts: C:/_/artifacts/*.pkg.tar.*
           token: ${{ secrets.GITHUB_TOKEN }}
   release-ucrt64:
     needs: [build, check]
     runs-on: windows-2022
     steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        continue-on-error: true
+        with:
+          name: UCRT64-packages
+          path: C:/_/artifacts
       - uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
           tag: ucrt64
-          artifacts: C:/_/artifacts/mingw-w64-ucrt-x86_64*.pkg.tar.*
+          artifacts: C:/_/artifacts/*.pkg.tar.*
           token: ${{ secrets.GITHUB_TOKEN }}
   release-all:
     needs: [build, check]
     runs-on: windows-2022
     steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        continue-on-error: true
+        with:
+          name: Display structure of downloaded files
+          path: C:/_/artifacts
       - uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
