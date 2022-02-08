@@ -499,3 +499,13 @@ jobs:
           tag: ucrt64
           artifacts: C:/_/artifacts/mingw-w64-ucrt-x86_64*.pkg.tar.*
           token: ${{ secrets.GITHUB_TOKEN }}
+  release-all:
+    needs: [release-clang32, release-clang64, release-mingw32, release-mingw64, release-ucrt64]
+    runs-on: windows-2022
+    steps:
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          tag: ucrt64
+          artifacts: C:/_/artifacts/mingw-w64-ucrt-x86_64*.pkg.tar.*
+          token: ${{ secrets.GITHUB_TOKEN }}
