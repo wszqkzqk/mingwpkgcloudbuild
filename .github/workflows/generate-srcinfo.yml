@@ -10,7 +10,7 @@ on:
 
 jobs:
   update-srcinfo:
-    runs-on: windows-2022
+    runs-on: windows-latest
     if: ${{ github.repository == 'wszqkzqk/mingwpkgcloudbuild' || github.event_name == 'workflow_dispatch' }}
 
     steps:

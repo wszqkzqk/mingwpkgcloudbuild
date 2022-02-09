@@ -15,11 +15,11 @@ jobs:
       fail-fast: false
       matrix:
         include: [
-          { msystem: MINGW64, can-fail: false, runner: windows-2022 },
-          { msystem: MINGW32, can-fail: false, runner: windows-2022 },
-          { msystem: UCRT64, can-fail: false, runner: windows-2022 },
-          { msystem: CLANG64, can-fail: true, runner: windows-2022 },
-          { msystem: CLANG32, can-fail: true, runner: windows-2022 },
+          { msystem: MINGW64, can-fail: false, runner: windows-latest },
+          { msystem: MINGW32, can-fail: false, runner: windows-latest },
+          { msystem: UCRT64, can-fail: false, runner: windows-latest },
+          { msystem: CLANG64, can-fail: true, runner: windows-latest },
+          { msystem: CLANG32, can-fail: true, runner: windows-latest },
           # { msystem: CLANGARM64, can-fail: true, runner: ['Windows', 'ARM64'] }
         ]
     name: ${{ matrix.msystem }}
@@ -99,7 +99,7 @@ jobs:
 
   check:
     needs: [build]
-    runs-on: windows-2022
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -128,7 +128,7 @@ jobs:
   #添加发布操作
   release-clang32:
     needs: [build, check]
-    runs-on: windows-2022
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -144,7 +144,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
   release-clang64:
     needs: [build, check]
-    runs-on: windows-2022
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -160,7 +160,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
   release-mingw32:
     needs: [build, check]
-    runs-on: windows-2022
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -176,7 +176,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
   release-mingw64:
     needs: [build, check]
-    runs-on: windows-2022
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -192,7 +192,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
   release-ucrt64:
     needs: [build, check]
-    runs-on: windows-2022
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -208,7 +208,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
   release-all:
     needs: [build, check]
-    runs-on: windows-2022
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
