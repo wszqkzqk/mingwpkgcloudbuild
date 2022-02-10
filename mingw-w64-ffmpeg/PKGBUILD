@@ -7,7 +7,7 @@ _realname=ffmpeg
 pkgbase="mingw-w64-${_realname}"
 pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
 pkgver=5.0
-pkgrel=2
+pkgrel=3
 pkgdesc="Complete and free Internet live audio and video broadcasting solution (mingw-w64)"
 arch=('any')
 mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clang32')
@@ -63,12 +63,19 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-dlfcn"
              "${MINGW_PACKAGE_PREFIX}-nasm")
 source=(https://ffmpeg.org/releases/${_realname}-${pkgver}.tar.xz{,.asc}
         "pathtools.c"
-        "pathtools.h")
+        "pathtools.h"
+        #patch from archlinux
+        "add-av_stream_get_first_dts-for-chromium.patch"
+        "vmaf-model-path.patch")
 validpgpkeys=('FCF986EA15E6E293A5644F10B4322F04D67658D8')
 sha256sums=('unknownunknownunknownunknownunknownunknownunknownunknownunknown0'
             'SKIP'
             '6f1016e6647b6340fdceefaf24ff391f4c0ea3c785ddf70c9794ca2356797888'
-            '6ce4dcf4ef6c4bce48dbcb6f1b5226baf79f74ac76719fb0c06419a0aadb37a3')
+            '6ce4dcf4ef6c4bce48dbcb6f1b5226baf79f74ac76719fb0c06419a0aadb37a3'
+            #patch from archlinux
+            '8463522c6ed9d20d6ed6bec493912fba13f93b3783b06ad46727cd18474d86bd'
+            'be11c48d756188509dac3e77a4f213dc8f43e1a459d073a8353b9a1193a09f0a'
+            )
 
 prepare() {
   test ! -d "${startdir}/../mingw-w64-pathtools" || {
@@ -77,6 +84,12 @@ prepare() {
   } || exit 1
 
   cd "${srcdir}/${_realname}-${pkgver}"
+
+  patch -Np1 -i "${srcdir}"/vmaf-model-path.patch
+
+  # https://crbug.com/1251779
+  patch -Np1 -i "${srcdir}"/add-av_stream_get_first_dts-for-chromium.patch
+
   cp -fHv "${srcdir}"/pathtools.[ch] libavfilter/
 
 }
