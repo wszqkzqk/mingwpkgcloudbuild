@@ -4,23 +4,23 @@
 # Contributor: Ray Donnelly <mingw.android@gmail.com>
 
 _realname=ffmpeg
-pkgbase="mingw-w64-${_realname}-min-for-webp"
-pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}-min-for-webp"
+pkgbase="mingw-w64-${_realname}"
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
 pkgver=5.0
-pkgrel=1
+pkgrel=4
 pkgdesc="Complete and free Internet live audio and video broadcasting solution (mingw-w64)"
 arch=('any')
 mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clang32')
 url="https://ffmpeg.org/"
 license=('GPL')
-provides=("${MINGW_PACKAGE_PREFIX}-${_realname}=5.0")
-conflicts=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 options=('staticlibs' 'strip')
-depends=("${MINGW_PACKAGE_PREFIX}-bzip2"
+depends=("${MINGW_PACKAGE_PREFIX}-aom"
+         "${MINGW_PACKAGE_PREFIX}-bzip2"
          "${MINGW_PACKAGE_PREFIX}-celt"
          $([[ ${MINGW_PACKAGE_PREFIX} == *-clang-* ]] || echo "${MINGW_PACKAGE_PREFIX}-frei0r-plugins")
          "${MINGW_PACKAGE_PREFIX}-fontconfig"
          "${MINGW_PACKAGE_PREFIX}-dav1d"
+         "${MINGW_PACKAGE_PREFIX}-gmp"
          "${MINGW_PACKAGE_PREFIX}-gnutls"
          "${MINGW_PACKAGE_PREFIX}-gsm"
          "${MINGW_PACKAGE_PREFIX}-lame"
@@ -54,6 +54,7 @@ depends=("${MINGW_PACKAGE_PREFIX}-bzip2"
          "${MINGW_PACKAGE_PREFIX}-x264"
          "${MINGW_PACKAGE_PREFIX}-x265"
          "${MINGW_PACKAGE_PREFIX}-xvidcore"
+         "${MINGW_PACKAGE_PREFIX}-zimg"
          "${MINGW_PACKAGE_PREFIX}-zlib")
 makedepends=("${MINGW_PACKAGE_PREFIX}-dlfcn"
              "${MINGW_PACKAGE_PREFIX}-cc"
@@ -102,26 +103,71 @@ build() {
   local -a common_config
   common_config+=(
     --disable-debug
+    --enable-amf
+    --enable-dxva2
+    --enable-d3d11va
+    --enable-fontconfig
+    --enable-gmp
+    --enable-gnutls
     --enable-gpl
     --enable-iconv
+    --enable-ladspa
+    --enable-libaom
+    --enable-libass
+    --enable-libbluray
+    --enable-libcaca
+    --enable-libcelt
+    --enable-libdav1d
+    --enable-libfreetype
+    --enable-libgme
+    --enable-libgsm
+    --enable-libmfx
+    --enable-libmodplug
+    --enable-libmp3lame
+    --enable-libopencore_amrnb
+    --enable-libopencore_amrwb
     --enable-libopenjpeg
+    --enable-libopus
     --enable-librtmp
+    --enable-libsoxr
+    --enable-libspeex
+    --enable-libsrt
+    --enable-libtheora
+    --enable-libvorbis
+    --enable-libx264
+    --enable-libx265
+    --enable-libxvid
+    --enable-libvpx
     --enable-libwebp
     --enable-libxml2
+    --enable-libzimg
+    --enable-nvenc
     --enable-openal
     --enable-pic
     --enable-postproc
     --enable-runtime-cpudetect
     --enable-swresample
     --enable-version3
+    --enable-vulkan
     --enable-zlib
     --disable-doc
   )
 
+  if [[ ${MINGW_PACKAGE_PREFIX} != *-clang-* ]]; then
+    common_config+=(
+      --enable-frei0r
+    )
+  fi
 
+  if [[ "${CARCH}" == "x86_64" ]]; then
+    common_config+=(
+       --enable-libsvtav1
+    )
+  fi
 
   if [[ "${MINGW_PACKAGE_PREFIX}" != *clang-i686* ]]; then
     common_config+=(
+       --enable-librav1e
        --enable-librsvg
     )
   fi
