@@ -18,6 +18,7 @@ depends=("${MINGW_PACKAGE_PREFIX}-aom"
          "${MINGW_PACKAGE_PREFIX}-bzip2"
          "${MINGW_PACKAGE_PREFIX}-celt"
          $([[ ${MINGW_PACKAGE_PREFIX} == *-clang-* ]] || echo "${MINGW_PACKAGE_PREFIX}-frei0r-plugins")
+         "${MINGW_PACKAGE_PREFIX}-fribidi"
          "${MINGW_PACKAGE_PREFIX}-fontconfig"
          "${MINGW_PACKAGE_PREFIX}-dav1d"
          "${MINGW_PACKAGE_PREFIX}-gmp"
@@ -35,6 +36,7 @@ depends=("${MINGW_PACKAGE_PREFIX}-aom"
          "${MINGW_PACKAGE_PREFIX}-libmodplug"
          $([[ "${MINGW_PACKAGE_PREFIX}" == *clang-i686* ]] || echo "${MINGW_PACKAGE_PREFIX}-librsvg")
          "${MINGW_PACKAGE_PREFIX}-libsoxr"
+         "${MINGW_PACKAGE_PREFIX}-libssh"
          "${MINGW_PACKAGE_PREFIX}-libtheora"
          "${MINGW_PACKAGE_PREFIX}-libvorbis"
          "${MINGW_PACKAGE_PREFIX}-libvpx"
@@ -119,6 +121,7 @@ build() {
     --enable-libcelt
     --enable-libdav1d
     --enable-libfreetype
+    --enable-libfribidi
     --enable-libgme
     --enable-libgsm
     --enable-libmfx
@@ -132,6 +135,7 @@ build() {
     --enable-libsoxr
     --enable-libspeex
     --enable-libsrt
+    --enable-libssh
     --enable-libtheora
     --enable-libvorbis
     --enable-libx264
