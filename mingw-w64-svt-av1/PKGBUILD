@@ -3,7 +3,7 @@
 _realname=SVT-AV1
 pkgbase=mingw-w64-svt-av1-git
 pkgname=("${MINGW_PACKAGE_PREFIX}-svt-av1-git")
-pkgver=0.9.0-git
+pkgver=0.9.1git
 pkgrel=1
 pkgdesc="Scalable Video Technology AV1 encoder and decoder (mingw-w64)"
 arch=('any')
