@@ -12,7 +12,9 @@ arch=('x86_64' 'i686')
 url="http://www.pygame.org"
 license=('LGPL')
 makedepends=(   "${MINGW_PACKAGE_PREFIX}-python-setuptools"
-                "${MINGW_PACKAGE_PREFIX}-SDL2")
+                "${MINGW_PACKAGE_PREFIX}-SDL2"
+                "${MINGW_PACKAGE_PREFIX}-cc"
+                "${MINGW_PACKAGE_PREFIX}-c++")
 depends=(   "${MINGW_PACKAGE_PREFIX}-python"
             "${MINGW_PACKAGE_PREFIX}-SDL2_mixer"
             "${MINGW_PACKAGE_PREFIX}-SDL2_ttf"
