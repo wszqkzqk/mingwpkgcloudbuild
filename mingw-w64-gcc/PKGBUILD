@@ -116,7 +116,7 @@ prepare() {
   apply_patch_with_msg \
     0002-Relocate-libintl.patch \
     0003-Windows-Follow-Posix-dir-exists-semantics-more-close.patch \
-    0004-Windows-Use-not-in-progpath-and-leave-case-as-is.patch \
+    #0004-Windows-Use-not-in-progpath-and-leave-case-as-is.patch \
     #0005-Windows-Don-t-ignore-native-system-header-dir.patch \
     0006-Windows-New-feature-to-allow-overriding.patch \
     0007-Build-EXTRA_GNATTOOLS-for-Ada.patch \
