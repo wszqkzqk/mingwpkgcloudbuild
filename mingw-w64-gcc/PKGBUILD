@@ -120,12 +120,12 @@ prepare() {
     0007-Build-EXTRA_GNATTOOLS-for-Ada.patch \
     0008-Prettify-linking-no-undefined.patch \
     0011-Enable-shared-gnat-implib.patch \
+    0012-Handle-spaces-in-path-for-default-manifest.patch \
     0014-gcc-9-branch-clone_function_name_1-Retain-any-stdcall-suffix.patch \
     0020-libgomp-Don-t-hard-code-MS-printf-attributes.patch
     #0004-Windows-Use-not-in-progpath-and-leave-case-as-is.patch \
     #0005-Windows-Don-t-ignore-native-system-header-dir.patch \
     #0010-Fix-using-large-PCH.patch \
-    #0012-Handle-spaces-in-path-for-default-manifest.patch \
 
   # Enable diagnostic color under mintty
   # Вячеслав Петрищев <vyachemail@gmail.com>
