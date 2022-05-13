@@ -17,8 +17,8 @@ should not be hard to modify it for others.
 https://gcc.gnu.org/bugzilla/show_bug.cgi?id=14940
 https://sourceforge.net/p/mingw-w64/bugs/382/
 ---
- gcc/config/i386/host-mingw32.c | 10 ++-------
- gcc/ggc-common.c               | 51 +++++++++++++++++++++++++++++++++---------
+ gcc/config/i386/host-mingw32.cc | 10 ++-------
+ gcc/ggc-common.cc               | 51 +++++++++++++++++++++++++++++++++---------
  2 files changed, 42 insertions(+), 19 deletions(-)
 
 diff --git a/gcc/config/i386/host-mingw32.c b/gcc/config/i386/host-mingw32.c
