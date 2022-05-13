@@ -21,10 +21,10 @@ https://sourceforge.net/p/mingw-w64/bugs/382/
  gcc/ggc-common.cc               | 51 +++++++++++++++++++++++++++++++++---------
  2 files changed, 42 insertions(+), 19 deletions(-)
 
-diff --git a/gcc/config/i386/host-mingw32.c b/gcc/config/i386/host-mingw32.c
+diff --git a/gcc/config/i386/host-mingw32.cc b/gcc/config/i386/host-mingw32.cc
 index aa17378..631d9c4 100644
---- a/gcc/config/i386/host-mingw32.c
-+++ b/gcc/config/i386/host-mingw32.c
+--- a/gcc/config/i386/host-mingw32.cc
++++ b/gcc/config/i386/host-mingw32.cc
 @@ -44,9 +44,6 @@ static size_t mingw32_gt_pch_alloc_granularity (void);
  
  static inline void w32_error(const char*, const char*, int, const char*);
@@ -63,10 +63,10 @@ index aa17378..631d9c4 100644
      return -1;
  
  
-diff --git a/gcc/ggc-common.c b/gcc/ggc-common.c
+diff --git a/gcc/ggc-common.cc b/gcc/ggc-common.cc
 index 03fbe7d..3a5df8a 100644
---- a/gcc/ggc-common.c
-+++ b/gcc/ggc-common.c
+--- a/gcc/ggc-common.cc
++++ b/gcc/ggc-common.cc
 @@ -591,7 +591,9 @@ gt_pch_restore (FILE *f)
    size_t i;
    struct mmap_info mmi;
