@@ -4,17 +4,17 @@ Date: Wed, 21 Apr 2021 07:54:59 +0200
 Subject: [PATCH] add -m(no-)align-vector-insn option for i386
 
 ---
- gcc/config/i386/i386-options.c |  9 +++++--
+ gcc/config/i386/i386-options.cc |  9 +++++--
  gcc/config/i386/i386.opt       |  8 +++++++
  gcc/config/i386/mingw32.h      |  2 +-
  gcc/config/i386/predicates.md  |  2 +-
  gcc/config/i386/sse.md         | 43 ++++++++++++++++++++++++++++++----
  5 files changed, 55 insertions(+), 9 deletions(-)
 
-diff --git a/gcc/config/i386/i386-options.c b/gcc/config/i386/i386-options.c
+diff --git a/gcc/config/i386/i386-options.cc b/gcc/config/i386/i386-options.cc
 index 91da2849c49..89333107fe4 100644
---- a/gcc/config/i386/i386-options.c
-+++ b/gcc/config/i386/i386-options.c
+--- a/gcc/config/i386/i386-options.cc
++++ b/gcc/config/i386/i386-options.cc
 @@ -376,6 +376,7 @@ ix86_target_string (HOST_WIDE_INT isa, HOST_WIDE_INT isa2,
      { "-minline-stringops-dynamically",	MASK_INLINE_STRINGOPS_DYNAMICALLY },
      { "-mms-bitfields",			MASK_MS_BITFIELD_LAYOUT },
