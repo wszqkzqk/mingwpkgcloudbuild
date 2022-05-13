@@ -23,24 +23,24 @@ gcc/c-family/ChangeLog:
 	PR c/95130
 	PR c/92292
 
-	* c-common.c (check_function_arguments): Pass also function
+	* c-common.cc (check_function_arguments): Pass also function
 	  declaration to check_function_format.
 
 	* c-common.h (check_function_format): Extra argument - function
 	  declaration.
 
-	* c-format.c (check_function_format): For builtin functions with a
+	* c-format.cc (check_function_format): For builtin functions with a
 	  built in format and at least one more, do not check the first one.
 ---
- gcc/c-family/c-common.c |  2 +-
+ gcc/c-family/c-common.cc |  2 +-
  gcc/c-family/c-common.h |  2 +-
- gcc/c-family/c-format.c | 32 ++++++++++++++++++++++++++++++--
+ gcc/c-family/c-format.cc | 32 ++++++++++++++++++++++++++++++--
  3 files changed, 32 insertions(+), 4 deletions(-)
 
-diff --git a/gcc/c-family/c-common.c b/gcc/c-family/c-common.c
+diff --git a/gcc/c-family/c-common.cc b/gcc/c-family/c-common.cc
 index 4a6a4edb763..00fc734d28e 100644
---- a/gcc/c-family/c-common.c
-+++ b/gcc/c-family/c-common.c
+--- a/gcc/c-family/c-common.cc
++++ b/gcc/c-family/c-common.cc
 @@ -6064,7 +6064,7 @@ check_function_arguments (location_t loc, const_tree fndecl, const_tree fntype,
    /* Check for errors in format strings.  */
  
@@ -63,10 +63,10 @@ index 8b7bf35e888..ee370eafbbc 100644
  				   vec<location_t> *);
  extern bool attribute_fallthrough_p (tree);
  extern tree handle_format_attribute (tree *, tree, tree, int, bool *);
-diff --git a/gcc/c-family/c-format.c b/gcc/c-family/c-format.c
+diff --git a/gcc/c-family/c-format.cc b/gcc/c-family/c-format.cc
 index afa77810a5c..bc2abee5146 100644
---- a/gcc/c-family/c-format.c
-+++ b/gcc/c-family/c-format.c
+--- a/gcc/c-family/c-format.cc
++++ b/gcc/c-family/c-format.cc
 @@ -1160,12 +1160,13 @@ decode_format_type (const char *s, bool *is_raw /* = NULL */)
     attribute themselves.  */
  
