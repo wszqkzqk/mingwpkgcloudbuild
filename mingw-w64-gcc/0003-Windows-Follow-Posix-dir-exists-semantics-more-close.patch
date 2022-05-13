@@ -10,13 +10,13 @@ path. In Posix, it isn't.
 A concrete instance of when this matters is when cross
 compiling GNU/Linux glibc on Windows.
 ---
- libcpp/files.c | 87 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ libcpp/files.cc | 87 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  1 file changed, 87 insertions(+)
 
-diff --git a/libcpp/files.c b/libcpp/files.c
+diff --git a/libcpp/files.cc b/libcpp/files.cc
 index ea2cc23..ac17272 100644
---- a/libcpp/files.c
-+++ b/libcpp/files.c
+--- a/libcpp/files.cc
++++ b/libcpp/files.cc
 @@ -30,6 +30,13 @@ along with this program; see the file COPYING3.  If not see
  #include "md5.h"
  #include <dirent.h>
