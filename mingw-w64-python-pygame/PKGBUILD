@@ -1,0 +1,47 @@
+_realname=pygame
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+provides=("${MINGW_PACKAGE_PREFIX}-python3-${_realname}")
+conflicts=("${MINGW_PACKAGE_PREFIX}-python3-${_realname}")
+replaces=("${MINGW_PACKAGE_PREFIX}-python3-${_realname}")
+pkgver=2.1.2
+pkgrel=1
+pkgdesc="Python game library"
+mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clang32')
+arch=('x86_64' 'i686')
+url="http://www.pygame.org"
+license=('LGPL')
+makedepends=(   "${MINGW_PACKAGE_PREFIX}-python-setuptools"
+                "${MINGW_PACKAGE_PREFIX}-cc")
+depends=(   "${MINGW_PACKAGE_PREFIX}-python"
+            "${MINGW_PACKAGE_PREFIX}-SDL2"
+            "${MINGW_PACKAGE_PREFIX}-SDL2_mixer"
+            "${MINGW_PACKAGE_PREFIX}-SDL2_ttf"
+            "${MINGW_PACKAGE_PREFIX}-SDL2_image"
+            "${MINGW_PACKAGE_PREFIX}-portmidi"
+            "${MINGW_PACKAGE_PREFIX}-freetype"
+            "${MINGW_PACKAGE_PREFIX}-libpng"
+            "${MINGW_PACKAGE_PREFIX}-libjpeg-turbo"
+            "${MINGW_PACKAGE_PREFIX}-libtiff"
+            "${MINGW_PACKAGE_PREFIX}-zlib"
+            "${MINGW_PACKAGE_PREFIX}-libwebp"
+            "${MINGW_PACKAGE_PREFIX}-libvorbis"
+            "${MINGW_PACKAGE_PREFIX}-libogg"
+            "${MINGW_PACKAGE_PREFIX}-flac"
+            "${MINGW_PACKAGE_PREFIX}-libmodplug"
+            "${MINGW_PACKAGE_PREFIX}-mpg123"
+            "${MINGW_PACKAGE_PREFIX}-opus"
+            "${MINGW_PACKAGE_PREFIX}-opusfile"
+            "${MINGW_PACKAGE_PREFIX}-freetype")
+source=("https://pypi.io/packages/source/p/pygame/pygame-$pkgver.tar.gz")
+sha256sums=('d6d0eca28f886f0477cd0721ac688189155a587f2bb8eae740e52ca56c3ad23c')
+
+build() {
+    cd pygame-"$pkgver"
+    python3 setup.py build
+}
+
+package() {
+    cd pygame-"$pkgver"
+    python3 setup.py install --prefix=${MINGW_PREFIX} --root=${pkgdir} --skip-build
+}
