@@ -12,10 +12,12 @@ url='https://github.com/Talinx/jp2a/'
 license=('GPL2')
 depends=(   "${MINGW_PACKAGE_PREFIX}-curl"
             "${MINGW_PACKAGE_PREFIX}-libjpeg"
-            "${MINGW_PACKAGE_PREFIX}-libpng")
+            "${MINGW_PACKAGE_PREFIX}-libpng"
+            "bash-completion")
 makedepends=(   "${MINGW_PACKAGE_PREFIX}-doxygen"
                 'autoconf-archive'
-                'git')
+                'git'
+                "autoconf-wrapper")
 _commit=9ed01d6aa57c5b63657abe5c76cd28935206084c	#refs/tags/v1.1.0
 source=("git+https://github.com/Talinx/jp2a.git#commit=${_commit}?signed")
 validpgpkeys=("5FCAE86E581E73AD91CB3235E7DBBCF6B02920CC") # Christoph Raitzig
