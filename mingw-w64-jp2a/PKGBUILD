@@ -13,7 +13,8 @@ license=('GPL2')
 depends=(   "${MINGW_PACKAGE_PREFIX}-curl"
             "${MINGW_PACKAGE_PREFIX}-libjpeg"
             "${MINGW_PACKAGE_PREFIX}-libpng"
-            "bash-completion")
+            "bash-completion"
+            "${MINGW_PACKAGE_PREFIX}-autotools")
 makedepends=(   "${MINGW_PACKAGE_PREFIX}-doxygen"
                 'autoconf-archive'
                 'git'
