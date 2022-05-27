@@ -22,22 +22,22 @@ validpgpkeys=("5FCAE86E581E73AD91CB3235E7DBBCF6B02920CC") # Christoph Raitzig
 sha256sums=('SKIP')
 
 prepare(){
-  cd "${pkgname}"
+  cd "${_realname}"
   autoreconf -vi
 }
 
 build(){
-  cd "${pkgname}"
+  cd "${_realname}"
   bashcompdir=/usr/share/bash-completion/completions ./configure --prefix='/usr'
   make
 }
 
 check() {
-  cd "${pkgname}"
+  cd "${_realname}"
   make check
 }
 
 package(){
-  cd "${pkgname}"
+  cd "${_realname}"
   make DESTDIR="${pkgdir}" install
 }
