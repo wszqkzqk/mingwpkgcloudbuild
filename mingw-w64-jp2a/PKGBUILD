@@ -2,6 +2,7 @@
 
 _realname=jp2a
 pkgbase="mingw-w64-${_realname}"
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
 pkgver=1.1.1
 pkgrel=1
 pkgdesc='A small utility for converting JPG images to ASCII'
