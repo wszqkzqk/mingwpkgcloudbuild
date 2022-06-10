@@ -1,0 +1,562 @@
+# Maintainer: Alexey Pavlov <alexpux@gmail.com>
+# Maintainer: Ray Donnelly <mingw.android@gmail.com>
+# Contributor: Saul Ibarra Corretge <saghul@gmail.com>
+# Contributor: Frode Solheim <frode@fs-uae.net>
+
+_primary_python="yes"
+_pybasever=3.9
+_realname=python
+
+if [[ "${_primary_python}" == "yes" ]]; then
+  pkgbase="mingw-w64-${_realname}"
+  pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+  provides=("${MINGW_PACKAGE_PREFIX}-python3"
+            "${MINGW_PACKAGE_PREFIX}-python${_pybasever}")
+  conflicts=("${MINGW_PACKAGE_PREFIX}-python3"
+             "${MINGW_PACKAGE_PREFIX}-python${_pybasever}"
+            "${MINGW_PACKAGE_PREFIX}-python2<2.7.16-7")
+  replaces=("${MINGW_PACKAGE_PREFIX}-python3"
+            "${MINGW_PACKAGE_PREFIX}-python${_pybasever}")
+else
+  pkgbase="mingw-w64-${_realname}${_pybasever}"
+  pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}${_pybasever}")
+fi
+pkgver=${_pybasever}.13
+pkgrel=1
+pkgdesc="A high-level scripting language (mingw-w64)"
+arch=('any')
+mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clang32' 'clangarm64')
+license=('PSF')
+url="https://www.python.org/"
+depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs"
+         "${MINGW_PACKAGE_PREFIX}-expat"
+         "${MINGW_PACKAGE_PREFIX}-bzip2"
+         "${MINGW_PACKAGE_PREFIX}-libffi"
+         "${MINGW_PACKAGE_PREFIX}-mpdecimal"
+         "${MINGW_PACKAGE_PREFIX}-ncurses"
+         "${MINGW_PACKAGE_PREFIX}-openssl"
+         "${MINGW_PACKAGE_PREFIX}-sqlite3"
+         "${MINGW_PACKAGE_PREFIX}-tcl"
+         "${MINGW_PACKAGE_PREFIX}-tk"
+         "${MINGW_PACKAGE_PREFIX}-zlib"
+         "${MINGW_PACKAGE_PREFIX}-xz"
+         "${MINGW_PACKAGE_PREFIX}-tzdata")
+makedepends=(
+  "${MINGW_PACKAGE_PREFIX}-cc"
+  "${MINGW_PACKAGE_PREFIX}-autotools"
+  "autoconf-archive"
+)
+options=('makeflags') # 'debug' '!strip')
+source=("https://www.python.org/ftp/python/${pkgver%rc?}/Python-${pkgver}.tar.xz"
+        0001-sysconfig-make-_sysconfigdata.py-relocatable.patch
+        0002-restore-setup-config.patch
+        0003-build-add-with-nt-threads-and-make-it-default-on-min.patch
+        0004-MINGW-translate-gcc-internal-defines-to-python-platf.patch
+        0005-MINGW-configure-MACHDEP-and-platform-for-build.patch
+        0006-MINGW-preset-configure-defaults.patch
+        0007-MINGW-configure-largefile-support-for-windows-builds.patch
+        0008-MINGW-add-srcdir-PC-to-CPPFLAGS.patch
+        0009-MINGW-init-system-calls.patch
+        0010-MINGW-build-in-windows-modules-winreg.patch
+        0011-MINGW-determine-if-pwdmodule-should-be-used.patch
+        0012-issue6672-v2-Add-Mingw-recognition-to-pyport.h-to-al.patch
+        0013-MINGW-configure-for-shared-build.patch
+        0014-MINGW-dynamic-loading-support.patch
+        0015-MINGW-ignore-main-program-for-frozen-scripts.patch
+        0016-MINGW-setup-_multiprocessing-module.patch
+        0017-MINGW-setup-select-module.patch
+        0018-MINGW-setup-_ctypes-module-with-system-libffi.patch
+        0019-MINGW-defect-winsock2-and-setup-_socket-module.patch
+        0020-MINGW-exclude-unix-only-modules.patch
+        0021-MINGW-setup-msvcrt-and-_winapi-modules.patch
+        0022-sysconfig-MINGW-build-extensions-with-GCC.patch
+        0023-MINGW-setup-_ssl-module.patch
+        0024-MINGW-generalization-of-posix-build-in-sysconfig.py.patch
+        0025-MINGW-support-stdcall-without-underscore.patch
+        0026-use-replace-instead-rename-to-avoid-failure-on-windo.patch
+        0027-MINGW-customize-site.patch
+        0028-add-python-config-sh.patch
+        0029-cross-darwin-feature.patch
+        0030-mingw-system-libffi.patch
+        0031-msys-mingw-prefer-unix-sep-if-MSYSTEM.patch
+        0032-mingw-use-posix-getpath.patch
+        0033-mingw-add-ModuleFileName-dir-to-PATH.patch
+        0034-mingw-add-BUILDIN_WIN32_MODULEs-time-msvcrt.patch
+        0035-msys-cygwin-semi-native-build-sysconfig.patch
+        0036-sysconfig-mingw-sysconfig-like-posix.patch
+        0037-build-_winapi-earlier-so-we-can-use-it-in-distutils-.patch
+        0038-cross-dont-add-multiarch-paths-if-cross-compiling.patch
+        0039-mingw-use-backslashes-in-compileall-py.patch
+        0040-msys-convert_path-fix-and-root-hack.patch
+        0041-allow-static-tcltk.patch
+        0042-mingw-pdcurses_ISPAD.patch
+        0043-grammar-fixes.patch
+        0044-builddir-fixes.patch
+        0045-msys-monkeypatch-os-system-via-sh-exe.patch
+        0046-msys-replace-slashes-used-in-io-redirection.patch
+        0047-remove_path_max.default.patch
+        0048-dont-link-with-gettext.patch
+        0049-ctypes-python-dll.patch
+        0050-gdbm-module-includes.patch
+        0051-use-gnu_printf-in-format.patch
+        0052-mingw-fix-ssl-dont-use-enum_certificates.patch
+        0053-fix-using-dllhandle-and-winver-mingw.patch
+        0054-Add-AMD64-to-sys-config-so-msvccompiler-get_build_ve.patch
+        0055-MINGW-link-with-additional-library.patch
+        0056-install-msilib.patch
+        0057-fix-signal-module-build.patch
+        0058-build-build-winconsoleio-and-_testconsole.patch
+        0059-expose-sem_unlink.patch
+        0060-cygpty-isatty.patch
+        0061-disable-broken-gdbm-module.patch
+        0062-build-link-win-resource-files-and-build-pythonw.patch
+        0063-3.7-mpdec-mingw.patch
+        0064-disable-readline.patch
+        0065-fix-isselectable.patch
+        0066-use-_wcsnicmp-instead-wcsncasecmp.patch
+        0067-_xxsubinterpretersmodule.patch
+        0068-sqlite3-module-defines.patch
+        0069-configure.ac-fix-inet_pton-check.patch
+        0070-set-venv-activate-path-unix.patch
+        0071-venv-creation-fixes.patch
+        0072-pass-gen-profile-ldflags.patch
+        0073-pkg-config-windows-must-link-ext-with-python-lib.patch
+        0074-importlib-bootstrap-path-sep.patch
+        0075-pathlib-path-sep.patch
+        0076-warnings-fixes.patch
+        0077-fix-build-testinternalcapi.patch
+        0078-extend-MS_WINDOWS-flag.patch
+        0079-clang-arm64.patch
+        0080-configure.ac-set-MINGW-stack-reserve.patch
+        0081-Don-t-use-os.pathsep-to-find-EOF.patch
+        0082-Fix-extension-suffix-for-c-extensions-on-mingw.patch
+        0083-Change-the-get_platform-method-in-sysconfig.patch
+        0084-distutils-compiler-customize-mingw-cygwin-compilers.patch
+        0085-distutils-compiler-enable-new-dtags.patch
+        0086-distutils-MINGW-build-extensions-with-GCC.patch
+        0087-distutils-use-Mingw32CCompiler-as-default-compiler-f.patch
+        0088-distutils-find-import-library.patch
+        0089-distutils-avoid-circular-dependency-from-time-module.patch
+        0090-distutils-generalization-of-posix-build-in-distutils.patch
+        0091-distutils-mingw-sysconfig-like-posix.patch
+        0092-distutils-get_versions-fixes.patch
+        0093-distutils-install-layout-as-posix.patch
+        0094-distutils-msys-convert_path-fix-and-root-hack.patch
+        0095-distutils-mingw-build-optimized-ext.patch
+        0096-distutils-cygwinccompiler-dont-strip-modules-if-pyde.patch
+        0097-distutils-get-compilers-from-env-vars.patch
+        0098-distutils-add-windmc-to-cygwinccompiler.patch
+        0099-distutils-fix-msvc9-import.patch
+        0100-distutils-mingw-add-LIBPL-to-library-dirs.patch
+        0101-distutils-Change-the-get_platform-method-in-distutil.patch
+        0102-build-Fix-ncursesw-include-lookup.patch
+        0103-tests-fix-test_bytes.patch
+        0104-time-fix-strftime-not-raising-for-invalid-year-value.patch
+        0105-ctypes-find_library-c-should-return-None-with-ucrt.patch
+        0106-build-Disable-checks-for-dlopen-dlfcn.patch
+        0107-Fix-install-location-of-the-import-library.patch
+        0108-Set-MSYS2_ARG_CONV_EXCL-for-the-shared-Python-module.patch
+        0109-build-Integrate-venvlauncher-build-installation-into.patch
+        0110-configure.ac-set-_WIN32_WINNT-version.patch
+        0111-configure.ac-don-t-check-for-clock_-functions.patch
+        0112-expanduser-normpath-paths-coming-from-env-vars.patch
+        0113-Add-support-for-Windows-7-Python-3.9.patch
+        0114-CI-test-the-build-and-add-some-mingw-specific-tests.patch
+        0115-decimal-backport-build-fixes.patch
+        0116-smoketests-test-that-_decimal-exists.patch
+        0117-Prefer-sysconfig.python_build.patch
+        0118-distutils-remove-checks-for-ancient-gcc-binutils.patch
+        0119-distutils-split-CC-env-var-before-passing-to-subproc.patch
+        0120-_testconsole.c-Fix-casing-path-sep.patch
+        0121-Return-consistent-architecture-markers-for-python-on.patch
+        0122-distutils-add-back-gcc_version.patch
+        0123-fix-mingw-cross-compiling-in-setup.py.patch
+        0124-Use-actions-setup-python-for-setting-up-correct-vers.patch
+        0125-Fix-buffer-overflow-in-Py_GetSepW.patch
+        0126-Remove-unnecessary-strlen-in-Py_NormalizeSepsW.patch
+        0127-handle-ncursesw-pkg-config-when-cross-compiling.patch
+        0128-Use-CC-instead-of-cc.patch
+        0129-bpo-46811-Make-test-suite-support-Expat-2.4.5-GH-314.patch
+        0130-Avoid-using-sysconfig-in-site.py.patch
+        0131-Commit-regenerated-importlib.patch
+        0132-configure-Include-a-header-in-the-check-for-_beginth.patch
+        0133-configure.ac-Default-to-without-c-locale-coercion-on.patch
+        0134-CI-remove-without-c-locale-coercion.patch)
+
+# Helper macros to help make tasks easier #
+apply_patch_with_msg() {
+  for _patch in "$@"
+  do
+    msg2 "Applying ${_patch}"
+    patch -Nbp1 -i "${srcdir}/${_patch}"
+  done
+}
+
+prepare() {
+  cd "${srcdir}/Python-${pkgver}"
+
+ apply_patch_with_msg 0001-sysconfig-make-_sysconfigdata.py-relocatable.patch \
+  0002-restore-setup-config.patch \
+  0003-build-add-with-nt-threads-and-make-it-default-on-min.patch \
+  0004-MINGW-translate-gcc-internal-defines-to-python-platf.patch \
+  0005-MINGW-configure-MACHDEP-and-platform-for-build.patch \
+  0006-MINGW-preset-configure-defaults.patch \
+  0007-MINGW-configure-largefile-support-for-windows-builds.patch \
+  0008-MINGW-add-srcdir-PC-to-CPPFLAGS.patch \
+  0009-MINGW-init-system-calls.patch \
+  0010-MINGW-build-in-windows-modules-winreg.patch \
+  0011-MINGW-determine-if-pwdmodule-should-be-used.patch \
+  0012-issue6672-v2-Add-Mingw-recognition-to-pyport.h-to-al.patch \
+  0013-MINGW-configure-for-shared-build.patch \
+  0014-MINGW-dynamic-loading-support.patch \
+  0015-MINGW-ignore-main-program-for-frozen-scripts.patch \
+  0016-MINGW-setup-_multiprocessing-module.patch \
+  0017-MINGW-setup-select-module.patch \
+  0018-MINGW-setup-_ctypes-module-with-system-libffi.patch \
+  0019-MINGW-defect-winsock2-and-setup-_socket-module.patch \
+  0020-MINGW-exclude-unix-only-modules.patch \
+  0021-MINGW-setup-msvcrt-and-_winapi-modules.patch \
+  0022-sysconfig-MINGW-build-extensions-with-GCC.patch \
+  0023-MINGW-setup-_ssl-module.patch \
+  0024-MINGW-generalization-of-posix-build-in-sysconfig.py.patch \
+  0025-MINGW-support-stdcall-without-underscore.patch \
+  0026-use-replace-instead-rename-to-avoid-failure-on-windo.patch \
+  0027-MINGW-customize-site.patch \
+  0028-add-python-config-sh.patch \
+  0029-cross-darwin-feature.patch \
+  0030-mingw-system-libffi.patch \
+  0031-msys-mingw-prefer-unix-sep-if-MSYSTEM.patch \
+  0032-mingw-use-posix-getpath.patch \
+  0033-mingw-add-ModuleFileName-dir-to-PATH.patch \
+  0034-mingw-add-BUILDIN_WIN32_MODULEs-time-msvcrt.patch \
+  0035-msys-cygwin-semi-native-build-sysconfig.patch \
+  0036-sysconfig-mingw-sysconfig-like-posix.patch \
+  0037-build-_winapi-earlier-so-we-can-use-it-in-distutils-.patch \
+  0038-cross-dont-add-multiarch-paths-if-cross-compiling.patch \
+  0039-mingw-use-backslashes-in-compileall-py.patch \
+  0040-msys-convert_path-fix-and-root-hack.patch \
+  0041-allow-static-tcltk.patch \
+  0042-mingw-pdcurses_ISPAD.patch \
+  0043-grammar-fixes.patch \
+  0044-builddir-fixes.patch \
+  0045-msys-monkeypatch-os-system-via-sh-exe.patch \
+  0046-msys-replace-slashes-used-in-io-redirection.patch \
+  0047-remove_path_max.default.patch \
+  0048-dont-link-with-gettext.patch \
+  0049-ctypes-python-dll.patch \
+  0050-gdbm-module-includes.patch \
+  0051-use-gnu_printf-in-format.patch \
+  0052-mingw-fix-ssl-dont-use-enum_certificates.patch \
+  0053-fix-using-dllhandle-and-winver-mingw.patch \
+  0054-Add-AMD64-to-sys-config-so-msvccompiler-get_build_ve.patch \
+  0055-MINGW-link-with-additional-library.patch \
+  0056-install-msilib.patch \
+  0057-fix-signal-module-build.patch \
+  0058-build-build-winconsoleio-and-_testconsole.patch \
+  0059-expose-sem_unlink.patch \
+  0060-cygpty-isatty.patch \
+  0061-disable-broken-gdbm-module.patch \
+  0062-build-link-win-resource-files-and-build-pythonw.patch \
+  0063-3.7-mpdec-mingw.patch \
+  0064-disable-readline.patch \
+  0065-fix-isselectable.patch \
+  0066-use-_wcsnicmp-instead-wcsncasecmp.patch \
+  0067-_xxsubinterpretersmodule.patch \
+  0068-sqlite3-module-defines.patch \
+  0069-configure.ac-fix-inet_pton-check.patch \
+  0070-set-venv-activate-path-unix.patch \
+  0071-venv-creation-fixes.patch \
+  0072-pass-gen-profile-ldflags.patch \
+  0073-pkg-config-windows-must-link-ext-with-python-lib.patch \
+  0074-importlib-bootstrap-path-sep.patch \
+  0075-pathlib-path-sep.patch \
+  0076-warnings-fixes.patch \
+  0077-fix-build-testinternalcapi.patch \
+  0078-extend-MS_WINDOWS-flag.patch \
+  0079-clang-arm64.patch \
+  0080-configure.ac-set-MINGW-stack-reserve.patch \
+  0081-Don-t-use-os.pathsep-to-find-EOF.patch \
+  0082-Fix-extension-suffix-for-c-extensions-on-mingw.patch \
+  0083-Change-the-get_platform-method-in-sysconfig.patch \
+  0084-distutils-compiler-customize-mingw-cygwin-compilers.patch \
+  0085-distutils-compiler-enable-new-dtags.patch \
+  0086-distutils-MINGW-build-extensions-with-GCC.patch \
+  0087-distutils-use-Mingw32CCompiler-as-default-compiler-f.patch \
+  0088-distutils-find-import-library.patch \
+  0089-distutils-avoid-circular-dependency-from-time-module.patch \
+  0090-distutils-generalization-of-posix-build-in-distutils.patch \
+  0091-distutils-mingw-sysconfig-like-posix.patch \
+  0092-distutils-get_versions-fixes.patch \
+  0093-distutils-install-layout-as-posix.patch \
+  0094-distutils-msys-convert_path-fix-and-root-hack.patch \
+  0095-distutils-mingw-build-optimized-ext.patch \
+  0096-distutils-cygwinccompiler-dont-strip-modules-if-pyde.patch \
+  0097-distutils-get-compilers-from-env-vars.patch \
+  0098-distutils-add-windmc-to-cygwinccompiler.patch \
+  0099-distutils-fix-msvc9-import.patch \
+  0100-distutils-mingw-add-LIBPL-to-library-dirs.patch \
+  0101-distutils-Change-the-get_platform-method-in-distutil.patch \
+  0102-build-Fix-ncursesw-include-lookup.patch \
+  0103-tests-fix-test_bytes.patch \
+  0104-time-fix-strftime-not-raising-for-invalid-year-value.patch \
+  0105-ctypes-find_library-c-should-return-None-with-ucrt.patch \
+  0106-build-Disable-checks-for-dlopen-dlfcn.patch \
+  0107-Fix-install-location-of-the-import-library.patch \
+  0108-Set-MSYS2_ARG_CONV_EXCL-for-the-shared-Python-module.patch \
+  0109-build-Integrate-venvlauncher-build-installation-into.patch \
+  0110-configure.ac-set-_WIN32_WINNT-version.patch \
+  0111-configure.ac-don-t-check-for-clock_-functions.patch \
+  0112-expanduser-normpath-paths-coming-from-env-vars.patch \
+  0113-Add-support-for-Windows-7-Python-3.9.patch \
+  0114-CI-test-the-build-and-add-some-mingw-specific-tests.patch \
+  0115-decimal-backport-build-fixes.patch \
+  0116-smoketests-test-that-_decimal-exists.patch \
+  0117-Prefer-sysconfig.python_build.patch \
+  0118-distutils-remove-checks-for-ancient-gcc-binutils.patch \
+  0119-distutils-split-CC-env-var-before-passing-to-subproc.patch \
+  0120-_testconsole.c-Fix-casing-path-sep.patch \
+  0121-Return-consistent-architecture-markers-for-python-on.patch \
+  0122-distutils-add-back-gcc_version.patch \
+  0123-fix-mingw-cross-compiling-in-setup.py.patch \
+  0124-Use-actions-setup-python-for-setting-up-correct-vers.patch \
+  0125-Fix-buffer-overflow-in-Py_GetSepW.patch \
+  0126-Remove-unnecessary-strlen-in-Py_NormalizeSepsW.patch \
+  0127-handle-ncursesw-pkg-config-when-cross-compiling.patch \
+  0128-Use-CC-instead-of-cc.patch \
+  0129-bpo-46811-Make-test-suite-support-Expat-2.4.5-GH-314.patch \
+  0130-Avoid-using-sysconfig-in-site.py.patch \
+  0131-Commit-regenerated-importlib.patch \
+  0132-configure-Include-a-header-in-the-check-for-_beginth.patch \
+  0133-configure.ac-Default-to-without-c-locale-coercion-on.patch \
+  0134-CI-remove-without-c-locale-coercion.patch
+ 
+  autoreconf -vfi
+}
+
+build() {
+  declare -a _extra_config
+  if check_option "debug" "n"; then
+    _extra_config+=("--enable-optimizations")
+    # PGO should be done with -O3
+    CFLAGS="${CFLAGS/-O2/-O3} -ffat-lto-objects"
+    # FIXME: https://github.com/msys2-contrib/cpython-mingw/issues/10
+    # _extra_config+=("--with-lto")
+  else
+    CFLAGS+=" -O0 -ggdb"
+    CXXFLAGS+=" -O0 -ggdb"
+    _extra_config+=("--with-pydebug")
+  fi
+
+  [[ -d "${srcdir}/build-${CARCH}" ]] && rm -rf "${srcdir}/build-${CARCH}"
+  mkdir -p "${srcdir}/build-${CARCH}" && cd "${srcdir}/build-${CARCH}"
+
+  ../Python-${pkgver}/configure \
+    --prefix=${MINGW_PREFIX} \
+    --host=${MINGW_CHOST} \
+    --build=${MINGW_CHOST} \
+    --enable-shared \
+    --with-system-expat \
+    --with-system-ffi \
+    --with-system-libmpdec \
+    --without-ensurepip \
+    --enable-loadable-sqlite-extensions \
+    --with-tzpath=${MINGW_PREFIX}/share/zoneinfo \
+    "${_extra_config[@]}"
+
+  make
+}
+
+check() {
+  cd "${srcdir}/build-${CARCH}"
+
+  # Some basic tests to ensure nothing major or MSYS2 specific features are broken
+  ./python.exe "../Python-${pkgver}/mingw_smoketests.py"
+  MSYSTEM= ./python.exe "../Python-${pkgver}/mingw_smoketests.py"
+}
+
+package() {
+  cd "${srcdir}/build-${CARCH}"
+
+  make -j1 install DESTDIR="${pkgdir}"
+
+  # gdb pretty printers for debugging Python itself; to use:
+  # python
+  # sys.path.append('C:/msys64/mingw64/share/gdb/python3')
+  # import python_gdb
+  # reload(python_gdb)
+  # end
+  if [[ "${_primary_python}" == "yes" ]]; then
+    [[ -d "${pkgdir}${MINGW_PREFIX}"/share/gdb/python3/ ]] || mkdir -p "${pkgdir}${MINGW_PREFIX}"/share/gdb/python3/
+    cp -f python.exe-gdb.py "${pkgdir}${MINGW_PREFIX}"/share/gdb/python3/python_gdb.py
+  fi
+
+  # some useful "stuff"
+  install -dm755 "${pkgdir}${MINGW_PREFIX}"/lib/python${_pybasever}/Tools/{i18n,scripts}
+  install -m755 "${srcdir}/Python-${pkgver}"/Tools/i18n/{msgfmt,pygettext}.py "${pkgdir}${MINGW_PREFIX}"/lib/python${_pybasever}/Tools/i18n/
+  install -m755 "${srcdir}/Python-${pkgver}"/Tools/scripts/{README,*py} "${pkgdir}${MINGW_PREFIX}"/lib/python${_pybasever}/Tools/scripts/
+
+  # fixup shebangs
+  for fscripts in 2to3 2to3-${_pybasever} idle3 idle${_pybasever} pydoc3 pydoc${_pybasever}; do
+    sed -i "s|$(cygpath -w ${MINGW_PREFIX} | sed 's|\\|\\\\|g')/bin/python${_pybasever}.exe|/usr/bin/env python${_pybasever}.exe|g" \
+      "${pkgdir}${MINGW_PREFIX}"/bin/${fscripts}
+  done
+
+  # default aliases for all scripts/binaries
+  if [[ "${_primary_python}" == "yes" ]]; then
+    # Default names are aliases for Python now
+    cp "${pkgdir}${MINGW_PREFIX}"/bin/python3.exe "${pkgdir}${MINGW_PREFIX}"/bin/python.exe
+    cp "${pkgdir}${MINGW_PREFIX}"/bin/python3w.exe "${pkgdir}${MINGW_PREFIX}"/bin/pythonw.exe
+    cp "${pkgdir}${MINGW_PREFIX}"/bin/python3-config "${pkgdir}${MINGW_PREFIX}"/bin/python-config
+    cp "${pkgdir}${MINGW_PREFIX}"/bin/idle3 "${pkgdir}${MINGW_PREFIX}"/bin/idle
+    cp "${pkgdir}${MINGW_PREFIX}"/bin/pydoc3 "${pkgdir}${MINGW_PREFIX}"/bin/pydoc
+  fi
+
+  # delete anything that could conflict with the primary Python
+  if [[ "${_primary_python}" != "yes" ]]; then
+    rm "${pkgdir}${MINGW_PREFIX}"/bin/python3.exe
+    rm "${pkgdir}${MINGW_PREFIX}"/bin/python3w.exe
+    rm "${pkgdir}${MINGW_PREFIX}"/bin/python3-config
+    rm "${pkgdir}${MINGW_PREFIX}"/bin/idle3
+    rm "${pkgdir}${MINGW_PREFIX}"/bin/pydoc3
+    rm "${pkgdir}${MINGW_PREFIX}"/bin/2to3
+    rm "${pkgdir}${MINGW_PREFIX}"/lib/pkgconfig/python3-embed.pc
+    rm "${pkgdir}${MINGW_PREFIX}"/lib/pkgconfig/python3.pc
+    rm "${pkgdir}${MINGW_PREFIX}"/share/man/man1/python3.1
+  fi
+}
+
+sha256sums=('125b0c598f1e15d2aa65406e83f792df7d171cdf38c16803b149994316a3080f'
+            '6337de6bd1515c54f40575dd4fc25a659763cd530e9adbb66837485114f1cdd0'
+            '750ff132c254931c5d8a32080eab599046b167ce225c7ea22ddd1e370f00f51a'
+            'effe5996734ecc5b52835c27ffb8734238102cc561d409a13f85ed56bd7fb053'
+            '5e780d6462861cf464512df6f92f9f8c37263f4b3afb52af1e44d0eecb5547f9'
+            'a444adad480c2263b26fc348fa124482deb22341fa8d32138d6dbd7289a22803'
+            '96a9f3bab85350e2317728ad78a822fb78304aeb115edcbc30a9a211599f615f'
+            'fdb5e3190bbe8aa30f0f58bbdfa40034ea451590a66af85e7a942c5728c68214'
+            'e01fee47bb4bbfc1be59406e4626f2560d1ba0c6ca9f5f4ed559301baf2a14fd'
+            'f3ff981854f9fef268912bc10049ec69368f5e22ccce496fe517f8c4f5440ea2'
+            '059f4b11f62adba16740f295267e93fb3f1766e412964b3947e98ca42247d089'
+            '675d3b480592a0df5bd1e84a91f43ba87f7d36d93d58bb15fcdfbcbaa727f130'
+            'aa2f8774771ffda0e4306042884de1d433559ee9cb569a9ffee425a4b834e700'
+            'bbb11a0537dba6d626c6920527d9771ba9cb304c93538a9460b207ad2cc0238f'
+            'e59aeb573ed996af32a86ceeb4ad87a4a20bebf9f28475e1ddd923c1729378a3'
+            'fc76971747491b68fb395c179b88944d6bdd7be0b987228c214db2855d8490c4'
+            'ecce3420d093acb8af3ace74cf97de83a7beedc509857ccd8871c6e715342efb'
+            '5e0f76333682156d66031331d73f13285f38dbf9326518d50d16fbec3b8ffb9a'
+            '26b4690f1d6399b64f1a565410291540224b06702aae479c42a34857dad40679'
+            'cc608ffa8a682e70d808d35ee6a35328acb55a014e3b4162e4ef842b4e432b30'
+            '5661aabac099698d261b5e27eb806a964c1876e0f2913c56c15b3d24cb79dc0c'
+            'f9639eee2638ab1cd4e9f1c0f4c9c2d376a6b755a5dcf5e74a4e6e8b84322796'
+            '0657f9a06717bd35422e2118751a57e5373151aed3e0594c3a11e7aa3dcaaacd'
+            '13b13e9fa2b9f646c9e2dc4536e940b725d8dd29ae788ada213eb35389548845'
+            'a6ad3701c1224a3817d40d37f78ec2567dd75de85aa1c39c38b5e5999b221827'
+            'c095747279656cae53f96f5928adf615dd1245b847e7e2e2abb6a0ce99b716b3'
+            '6f85666af7cc28e29e07f264dee2c6b992973a846079360186a801cd82f892bc'
+            '3ca1f8b86af5981fb846462c6f98e9126ca4b90ebb13bf1c6a57b5c6577b7581'
+            '68fec7cd2add3a08a0b6db74a2d8e08be58eb3278d609662fd0c8cdafbce0839'
+            '52827a925c32d57603812cd9e128591a30f9bc12d5e0794700c6c520b5571eb9'
+            'b9b5ab0fb8e3c167e43b05050b57f58416d3c278f98ab5af238f0bda7b41c791'
+            'd08b27bb56411ee47ae93be65189642ce9285bae57a6f09d80b35e613f42c281'
+            '1d4ff2c3a145ce81c870f7429b0ad62e3e255ede1eca17a614eef301beec3b7a'
+            'fe4aff5c29d38154d8dba6b9fe2314e8e30760549edfd1c2a416f25a4d0e8ff6'
+            '74f60b3badf71a9bfcd6621be0425f72925c9ac7365490d2b1944ecd87e90ff0'
+            'c9aabf26a4a4f31c0f1f4c28d915057100aaf46d700cad2878d24991a104cd7e'
+            'dd4ab5f06c575f7809e74a3ff08196c5b804be6806f2101591305ab0a37b812c'
+            '44fca7f18a25c81f7e61831a71c221e444602e71f4e73f6bb420189ab73d2eff'
+            '3f9354ebe9d3603499a3e931923a25a628e5a221b6198697b565e1a192a50308'
+            '4a58b8852715fc93b3a8790d9728e6dcf2d510edf89f51efc73adfd2915fee2a'
+            '910d645b734ec01fbf4d4fbdef6baa72caaaadf59b074baa4965e1cc52023784'
+            '855b97723c4c51aed69215bcd1b1a88112d81756633f31887f1df7d357670193'
+            '41b6695165acb8e97e81d8afa58112a0d58e0dd9bc2134d08b5452ad624a31c5'
+            '0fe52d020b4e876d0f73450bd9a95f1eb76e58bc6681474ad348e067630d78d6'
+            'e74569144e093b94b8cc11791b6e5e9a35ed6ef1612d04e66861b221df262776'
+            'febd6d5c65734093aab3302230dbf8198fbbcc2263e45eb47d790c7f81b0ccb2'
+            'c78622fb66f2ebcde8abc0d237b9da14d447df56ef5016b17f4600ccdf2adac6'
+            'da413b5b69d07ef36b21bb31a3e0ec52d2f1bcac600038ce473edabd71a0fdeb'
+            '920fa3c807d60beb0c3afba4b113b3838f4ee583f8c3657955182756fd6c133c'
+            '5a11d08a49741d2c2ec5a0d4e99289aa91a65b634e75fe567ce090ab138a0980'
+            'dc8c863b98578ae5f562958105d17ded830dd83be74b0dad3f38edb6e430f09b'
+            '30988ae1c97cd46e2c61b2170db593bb119cbcf93f38d32fdb4ae39646ce4a14'
+            '2b7168e245e214a41e7841421d6f5228ba2e09d95577866fa366531f0c42a823'
+            'bdbb428f0b939c2c328298292db097f4705da7930fae78e263f29da2bc5fea77'
+            'e80994790eda6569fc3d5c04fe09e4e066b8ed48c8dce792958a49ba739327d1'
+            '26215c121bbd3bc5b8aef9f60956a0a5f7a2350d25663ae0de66b1ee6fbece98'
+            '7e76248277921be0e635c680d4112ada2daba5f3fc835d9c5c26dbc4c3c28adc'
+            '60c63fe93db91cf0166b471c45ac9018616dbd3033283bcea922b6d17d57ef5b'
+            'f84e27f66304d8c58b171f76b9d8c72aa24d1a7228f3db9f6c40f46f9118ea7b'
+            '5facd66496328c0f01f94946b10d5e8ff0759ca82fdc5ba827c5e48c848888cc'
+            'a8085a0957b507ec0cb072834f043c0def659ed7caceef2dc00c3c97033101ef'
+            '6f25e7f7c7e0b2258bf7bf0fec9c4a651f9f834063271c9efa694aee6fa5c307'
+            '12ddb02a29492333ad799ecf3e67491420bc6307d06139e02ba79cd5ac74d360'
+            '3e4359b59aa2a0b0ad05bd8183741003993e265d8f78c83f1e3be1e5b2c1ca0f'
+            '55825e220d769a9966b47e79633ae550186ebfa6fdc8dbddc253dbafa131038e'
+            'f9f7a5a8c641d9a5250c22ac24a75904a85f7c6727436f6085dc5bdd3195f657'
+            '28434264cfdaceaae24e98b77e4b9a129eced32f5034345f4e0268e38bb231df'
+            '9a06366dd1f60a5ce46e07d67bdc23fbd9d112ba78b0efadb8b0355bb3b21742'
+            '5033eeb7937eac6f419d1331eef5dabc6840bb0a5788cc5fb9de54002d1a6cda'
+            'd8da710db9ba1f92c46892b48c0ee873e37b64f35bd0fbea8138e52a1d70b1dc'
+            '8097545b6aa4f4323fbeed99f2dd6420be2657a9f76e2cb0b9ff7acfdd097b39'
+            '8df413b4c48714808b3b17b6b3a1970073a8a347581eca6bbb17d8f8fef0eb17'
+            'b94da14acb2abb64b105914e08a7780acd66ce41fe77e7820ea83c6f29486b14'
+            '2c5dd93451d33b7ab43910b9774382af7934aba724c435e529c12cc471886fba'
+            '29bab6c84246fd4ac74b9995fc04c52ac275ebafbff15c2eb949e023ffba93b0'
+            '29676cd6ff455218f61d454c442e3140bc96588a3ea9006daeea477e98dd2a09'
+            '0176e51635042cda2cc56109a40f51c997268189ee8087ff1eb3ed5a2c9ff281'
+            '1c4d0d394e830302fce109abd4d03d45a2ed84c475aefe418b15174c474ff706'
+            'df69410b3a05455ad33efb29f19baeee50a449304153d02e474c11c3ee8b159f'
+            '74434e0512958c19ec62ef9fedb9ea9bda0ece105f9ef8655e224ec52873253e'
+            '51335c151764298a0ad7a55e894c867e4f0660aec441f9b001626d53b7114d68'
+            '413f8dcce3a1da66490fd231f45f2a59a8f0aa2287cc4c49d8c71ee863356850'
+            '331932329f39e3821f52a3cb8e604f2a981a18364b5ce69cdfc040d6ab3a873b'
+            'b6a43d4e909be0bd75c4d4810731aa29dac46c1d223451b81174c630558f93ed'
+            '87a2f7c6ce4f3dedcd46b98d81734cfc8769f3a89fe5ff781687fc077b3aab26'
+            '30d8ca0d81503579b2078d570996078965918b1ac3517dec648067986f1b88cd'
+            'e6ba4eee7f8f8ba8ba899d7ce6c77ae60159289aa738c391b9ea7ab36babe3a4'
+            '739c169f9c2972ac1c69aa3d31170a942d95150f562761c10ffdff99840020db'
+            'cf16834ac8d315410e63db58063dfdbfbf4037e28005f15cefdabcf16257dc17'
+            '178166c789c36eaf813c5f5fddb78546aaad1346d7b7ebfe329df3f574c3476b'
+            'd3b581dac8dbcbe81cb5a7e0b8401bfc3cd3a517a3530a98b913592ba9064651'
+            '88be05f1592eb944cac33b54d23cf02129cd784e5574e977a87ffcb51b5c80c4'
+            '664cce172a047c46987e85bb77b5a16c0db464ba009b1ca38475a256c53b5e13'
+            '050b0d1323ae691bd5415da243ffd2ab1fd6b77e0ab2a4b49cf7e95ea492f98b'
+            '084a234b7440103a0971897b56f25b23a143cdba6b3ef77c03f4f4d27a8f5412'
+            '211688d60e2e8f54c3641b55cbf0a5c71fd8d15a118651f33d44f310dbe3c48e'
+            'acf4cdc431ab3bf967c77c47350adda478354b86b5e277f064794e57c8202b5f'
+            'd732d3d3710cf755ad7b95174ce3697d102bf7307f0a4cca28255ede9e3fa077'
+            '02c9f50853a2b0e2bf0477bab796a50435a6e35943a7ad53f7670c79cd9c6ae9'
+            '4b5cc3fbb9471fa6bc9e0efde6557b10e9b065ba17503e3520bf869719a3ff87'
+            '8c3284b48360e277b0df6f07a116f1be4dca9a956adfbbf4a79648a3d6685efe'
+            'f9112abc71a35e143fd12b4e08fb4f35b54e299c1e18e669effd00b56ffa2fee'
+            '5688c14606152ec8c07e52c9e9e79197e7314111f1bdd46eeabe6bb421e68720'
+            '1a03fef2a3be4be474351a6cd402d6a9231d3920fa4508829037385226f0cae8'
+            'cecf17130cfb23b092c737aacb41ecc819a82ad9adda1501ce2ab327b1e5cbf7'
+            'fe2cb3b6d9de8a0aaa3aa63ab70a15477bcbf237002c5bb2552827f774c7f6ad'
+            'c04e4e008a89cef8f1e43df3c9e42fa92d47385a2111bfa17c355bf1af1cb150'
+            'a6cedf55365e8ade99627ff20165b26231e45c9070870a6527430855e02625ef'
+            '434d9b58322166a59ef0f81649d6961f54ae9f737881f9bd0da1febb5002969a'
+            '9b3008bc111d96b3dfbc1afad5d785c8a7ce30f75f29cacc6deceb09903bf0a8'
+            '039d749c199177f47beb30ad81df908f64debfae8b6017ef0fc4929a9803ffae'
+            'ab17a40b54877323bb2b2a67940b1dee5b082c601e773abf0cdb8b92db08cc0b'
+            '21b615217c676aa01fad42647d731fbe9fd9e251bcc48229463f68c701d20178'
+            'dc3954eaaa9894c0152904214c26b5f52f083a50e28c0e365a637b5c8ec3b1e9'
+            '2e8da716028cbc8d70c30416fb6d09ab6b9ed1a19feae9be44cf1b6b6397715e'
+            '8d0d9f7bfe02f8d0cc326e954b78495349832d9d737c836a6278cf938cc23e2b'
+            '76bf79e07a48d0bc32057abadc60f51b9bfceaefe95e290da7111c2bf1716ecf'
+            '27a42bf6bb67ef512633832ed8872eaa55e71205fb921be5480d2042dd067890'
+            '9f36ffc28ae51be07f7c44fe92958474d116f11f30a79735ef30c13358a0edbb'
+            '02b7d674a4e0e672827b10422a9b3e0804040d65529cef254e27b129e9632c31'
+            '78d15b9d2d7fbfd38b998a9f93928d2c840fb8988fa328755861397e4197e232'
+            '9c808c0f18009ea91c27954a0250233b796e80393768b2fdb4dc51c3c380c6a7'
+            '0bfa3fd48ef5b5997d1b691ed9010182fbc6ab631e993bc50b72b28376591f2b'
+            '96278fd3a29b9a5b6ef367b8e622d668f0b1a1ebb0fcec001eeecd1586285baf'
+            'b02500b1d99018dc1597048c95cab384ed52abb68a71e3254b9fae0eb2193d6b'
+            '69b7131300b379255a3be1b7009982bee90ba04a5937cd8c4c806fb82b309818'
+            '764848f260ee4daa343751fb85406c8c1222247b33cd6a242c71d9602be6a32f'
+            'f4af4c331f383d6b0af4379d83f6d469ca81897e19eeb0fba37823194dd137db'
+            'bb0cd04429ff9127467b856df68af48894bf6bf08ad0ab98a18dfb7d445d377f'
+            '35c4ac6d2c4e06b8adb270a730ac3fd07a484d23f7c3963f5c901cffbd34689c'
+            '6eaae7e4f9e98e660aabca0463fb5b79c06d07de2bca8b6f8abea5fe5e2b8d9a'
+            'f2407282efc3aa9757f46a1f9bc2e3d39247dc606343efed49622df02e54ed86'
+            '492d600df66b717ad050d492cb8a4ae6589b69c0450f4a271fc470412dfb2f72'
+            'be8a25c121963231243427ba370760f0029460c64dc911ba6ab17295f0bbe0a2'
+            '78b017fb8310f13b7f12a4516ef336fac364fd5e9632ec2e5a212e6522ad0139')
