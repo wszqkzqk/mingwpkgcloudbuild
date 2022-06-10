@@ -39,7 +39,7 @@ checkdepends=("${MINGW_PACKAGE_PREFIX}-python-requests"
               "${MINGW_PACKAGE_PREFIX}-python-ipykernel"
               "${MINGW_PACKAGE_PREFIX}-python-numpy")
 source=("${_realname}-${pkgver}.tar.gz::https://files.pythonhosted.org/packages/source/${_realname::1}/$_realname/$_realname-$pkgver.tar.gz")
-sha256sums=('1bde14dfd2dea04414e2ee6cd4ccde59691f4d51d70284369da09bbf7d5878c1')
+sha256sums=('f2db3a10254241d9b447232cec8b424847f338d9d36f9a577a6192c332a46abd')
 
 prepare() {
   cd "${srcdir}"
