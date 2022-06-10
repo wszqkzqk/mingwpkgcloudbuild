@@ -74,11 +74,6 @@ package() {
   # setuptools doesnt see mingw-w64-python's readline
   find "${pkgdir}/" -name 'requires.txt' -delete
 
-  local PREFIX_WIN=$(cygpath -wm ${MINGW_PREFIX})
-  for _f in "${pkgdir}${MINGW_PREFIX}"/bin/*.cmd; do
-     sed -e "s|${PREFIX_WIN}/bin/||g" -i ${_f}
-  done
-
   # For the command to work on the bash prompt, you must use
   # winpty so include that in the Shebang before the python command.
   # I don't like this but what I like really doesn't matter.
