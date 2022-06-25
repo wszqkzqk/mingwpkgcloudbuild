@@ -1,0 +1,55 @@
+_realname=android-tools
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=31.0.3
+_tag=${pkgver}p1 # https://github.com/nmeum/android-tools sometimes carries extra patch version on top of the upstream versioning
+pkgrel=1
+pkgdesc='Android platform tools'
+arch=('any')
+mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clang32')
+url='http://tools.android.com/'
+license=(Apache MIT)
+depends=(   "${MINGW_PACKAGE_PREFIX}-libusb"
+            "${MINGW_PACKAGE_PREFIX}-protobuf"
+            "${MINGW_PACKAGE_PREFIX}-brotli"
+            "${MINGW_PACKAGE_PREFIX}-zstd"
+            )
+makedepends=( "${MINGW_PACKAGE_PREFIX}-pcre2"
+              "${MINGW_PACKAGE_PREFIX}-gtest"
+              "${MINGW_PACKAGE_PREFIX}-cmake"
+              "${MINGW_PACKAGE_PREFIX}-go"
+              "${MINGW_PACKAGE_PREFIX}-ninja"
+              git)
+source=(https://github.com/nmeum/android-tools/releases/download/$_tag/android-tools-$_tag.tar.xz
+        gcc12.patch)
+sha256sums=('0ef69f919d58a2bdff2083d2e83a9ef38df079ec82651b2544e9e48086df5ab8'
+            'df27d803da03d0a2656c4feb3cf471a076c459f45004ec20ec86a5cfb36be862')
+
+prepare() {
+  cd android-tools-$_tag
+  patch -Np1 -i ../gcc12.patch
+}
+
+build() {
+  cd android-tools-$_tag
+
+  declare -a extra_config
+  if check_option "debug" "n"; then
+    extra_config+=("-DCMAKE_BUILD_TYPE=Release")
+  else
+    extra_config+=("-DCMAKE_BUILD_TYPE=Debug")
+  fi
+
+  ${MINGW_PREFIX}/bin/cmake \
+    -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX} \
+    "${extra_config[@]}" \
+    -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+    -DCMAKE_C_FLAGS="$CFLAGS" \
+    -G Ninja -S . -B build
+}
+
+package() {
+  cd android-tools-$_tag
+
+  DESTDIR="${pkgdir}" ${MINGW_PREFIX}/bin/ninja -C build install
+}
