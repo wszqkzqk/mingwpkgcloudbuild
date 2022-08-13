@@ -1,0 +1,67 @@
+# Maintainer: Alexey Pavlov <alexpux@gmail.com>
+
+_realname=glade
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=3.40.0
+pkgrel=4
+pkgdesc="User interface builder for GTK+ and GNOME (mingw-w64)"
+arch=('any')
+mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clang32')
+url="https://glade.gnome.org/"
+license=("GPL" "LGPL")
+options=('strip' '!debug' 'staticlibs')
+depends=("${MINGW_PACKAGE_PREFIX}-gtk3"
+         "${MINGW_PACKAGE_PREFIX}-libxml2"
+         "${MINGW_PACKAGE_PREFIX}-gtk-update-icon-cache"
+         "${MINGW_PACKAGE_PREFIX}-adwaita-icon-theme"
+         "${MINGW_PACKAGE_PREFIX}-glib-networking")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-gobject-introspection"
+             "${MINGW_PACKAGE_PREFIX}-python-gobject"
+             "${MINGW_PACKAGE_PREFIX}-pkg-config"
+             "${MINGW_PACKAGE_PREFIX}-gtk-doc"
+             "${MINGW_PACKAGE_PREFIX}-gnome-common"
+             "${MINGW_PACKAGE_PREFIX}-itstool"
+             "${MINGW_PACKAGE_PREFIX}-meson"
+             "${MINGW_PACKAGE_PREFIX}-ninja")
+optdepends=("${MINGW_PACKAGE_PREFIX}-python: Python widgets support")
+source=(https://download.gnome.org/sources/${_realname}/${pkgver%.*}/${_realname}-${pkgver}.tar.xz
+        0001-meson-fix-build.patch)
+sha256sums=('31c9adaea849972ab9517b564e19ac19977ca97758b109edc3167008f53e3d9c'
+            '5b0fbcb7187371d4ca30989e01fc762b473e76fccc2b70ed78c7c5d469eaf42c')
+
+prepare() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+
+  # https://gitlab.gnome.org/GNOME/glade/-/merge_requests/117.patch
+  patch -p1 -i "${srcdir}/0001-meson-fix-build.patch"
+}
+
+build() {
+  [[ -d ${srcdir}/build-${MINGW_CHOST} ]] && rm -rf ${srcdir}/build-${MINGW_CHOST}
+  mkdir -p ${srcdir}/build-${MINGW_CHOST} && cd ${srcdir}/build-${MINGW_CHOST}
+
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+  meson \
+      --prefix="${MINGW_PREFIX}" \
+      --buildtype plain \
+      --auto-features=enabled \
+       -Dgtk_doc=false \
+       -Dgjs=disabled \
+       -Dwebkit2gtk=disabled \
+       -Dgladeui=true \
+       -Dintrospection=true \
+      ../${_realname}-${pkgver}
+
+  ninja
+}
+
+package() {
+  cd "${srcdir}/build-${MINGW_CHOST}"
+  DESTDIR="${pkgdir}" ninja install
+
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/COPYING" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING"
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/COPYING.GPL" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING.GPL"
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/COPYING.LGPL" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING.LGPL"
+}
