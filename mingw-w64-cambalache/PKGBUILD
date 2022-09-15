@@ -14,7 +14,7 @@ license=("LGPL2.1")
 options=('strip' '!debug' 'staticlibs')
 depends=("${MINGW_PACKAGE_PREFIX}-gtk3"
          "${MINGW_PACKAGE_PREFIX}-gtk4"
-         "${MINGW_PACKAGE_PREFIX}-webkit2gtk"
+         #"${MINGW_PACKAGE_PREFIX}-webkit2gtk"
          "${MINGW_PACKAGE_PREFIX}-glib2"
          "${MINGW_PACKAGE_PREFIX}-python-lxml"
          "${MINGW_PACKAGE_PREFIX}-python-gobject"
@@ -44,8 +44,8 @@ build() {
        -Dwebkit2gtk=disabled \
        -Dgladeui=true \
        -Dintrospection=true \
-       compile -C build \
       ../${_realname}-${pkgver}
+  meson compile -C build
 
 }
 
