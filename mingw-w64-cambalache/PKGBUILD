@@ -1,0 +1,55 @@
+ 
+# Maintainer: Alexey Pavlov <alexpux@gmail.com>
+
+_realname=cambalache
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=0.10.3
+pkgrel=1
+pkgdesc="A new RAD tool for Gtk 4 and 3 with a clear MVC design and data model first philosophy (mingw-w64)"
+arch=('any')
+mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clang32')
+url="https://gitlab.gnome.org/jpu/cambalache"
+license=("LGPL2.1")
+options=('strip' '!debug' 'staticlibs')
+depends=("${MINGW_PACKAGE_PREFIX}-gtk3"
+         "${MINGW_PACKAGE_PREFIX}-gtk4"
+         "${MINGW_PACKAGE_PREFIX}-webkit2gtk"
+         "${MINGW_PACKAGE_PREFIX}-glib2"
+         "${MINGW_PACKAGE_PREFIX}-python-lxml"
+         "${MINGW_PACKAGE_PREFIX}-python-gobject"
+         "${MINGW_PACKAGE_PREFIX}-libadwaita"
+         "${MINGW_PACKAGE_PREFIX}-libhandy"
+         "${MINGW_PACKAGE_PREFIX}-gobject-introspection")
+makedepends=("${MINGW_PACKAGE_PREFIX}-meson"
+             "${MINGW_PACKAGE_PREFIX}-ninja")
+source=("$url/-/archive/$pkgver/$pkgname-$pkgver.tar.gz")
+sha512sums=('968fd12af1ab62a4b99333169aaec65543659297e39d251d3da03bec7119b164750ab7fadc90c209d7953a7601c365619c57dfc922a7fde32083f74d92464084')
+
+prepare() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+}
+
+build() {
+  [[ -d ${srcdir}/build-${MINGW_CHOST} ]] && rm -rf ${srcdir}/build-${MINGW_CHOST}
+  mkdir -p ${srcdir}/build-${MINGW_CHOST} && cd ${srcdir}/build-${MINGW_CHOST}
+
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+  meson \
+      --prefix="${MINGW_PREFIX}" \
+      --buildtype plain \
+      --auto-features=enabled \
+       -Dgtk_doc=false \
+       -Dgjs=disabled \
+       -Dwebkit2gtk=disabled \
+       -Dgladeui=true \
+       -Dintrospection=true \
+       compile -C build \
+      ../${_realname}-${pkgver}
+
+}
+
+package() {
+  cd "${srcdir}/build-${MINGW_CHOST}"
+  meson install -C build --destdir "${pkgdir}"
+}
