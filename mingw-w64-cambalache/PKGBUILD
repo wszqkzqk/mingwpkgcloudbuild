@@ -42,7 +42,7 @@ build() {
        -Dgtk_doc=false \
        -Dgjs=disabled \
        -Dwebkit2gtk=disabled \
-       -Dgladeui=true \
+       #-Dgladeui=true \
        -Dintrospection=true \
       ../${_realname}-${pkgver}-2dd3ada526323671537ea882038b76f175fa7371
 
