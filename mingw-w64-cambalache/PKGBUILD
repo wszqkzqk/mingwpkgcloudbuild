@@ -44,7 +44,7 @@ build() {
        -Dwebkit2gtk=disabled \
        -Dgladeui=true \
        -Dintrospection=true \
-      ../${_realname}-${pkgver}
+      ../${_realname}-${pkgver}-2dd3ada526323671537ea882038b76f175fa7371
 
   ninja
 }
