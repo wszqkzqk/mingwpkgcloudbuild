@@ -24,10 +24,10 @@ depends=("${MINGW_PACKAGE_PREFIX}-gtk3"
 makedepends=("${MINGW_PACKAGE_PREFIX}-meson"
              "${MINGW_PACKAGE_PREFIX}-ninja")
 source=("$url/-/archive/$pkgver/$pkgname-$pkgver.tar.gz")
-sha512sums=('968fd12af1ab62a4b99333169aaec65543659297e39d251d3da03bec7119b164750ab7fadc90c209d7953a7601c365619c57dfc922a7fde32083f74d92464084')
+sha512sums=('1ae55ec26df44a7b219f1900133b2b7b132deae684d0a65c805253c353ed6b9e28dd6b8d6cc9737bff165600da3b823e38980547c059fc3fe547fe2eeede0cc2')
 
 prepare() {
-  cd "${srcdir}/${_realname}-${pkgver}"
+  cd "${srcdir}/${_realname}-${pkgver}-2dd3ada526323671537ea882038b76f175fa7371"
 }
 
 build() {
@@ -45,8 +45,8 @@ build() {
        -Dgladeui=true \
        -Dintrospection=true \
       ../${_realname}-${pkgver}
-  meson compile -C build
 
+  ninja
 }
 
 package() {
