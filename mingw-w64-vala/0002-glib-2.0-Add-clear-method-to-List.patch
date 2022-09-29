@@ -1,0 +1,32 @@
+From 6e5cb9f914ff986ac9bc60250c78c720ebd8393e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
+Date: Thu, 29 Sep 2022 19:19:21 +0800
+Subject: [PATCH] glib-2.0: Add `clear` method for GLib.List
+
+---
+ vapi/glib-2.0.vapi | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/vapi/glib-2.0.vapi b/vapi/glib-2.0.vapi
+index 497d6bb6c..1ee708f74 100644
+--- a/vapi/glib-2.0.vapi
++++ b/vapi/glib-2.0.vapi
+@@ -5166,6 +5166,15 @@ namespace GLib {
+ 			}
+ 			return this;
+ 		}
++		[ReturnsModifiedPointer ()]
++		public unowned void clear (void) {
++			unowned List<G>? l = this;
++			while (l != null) {
++				delete_link ((!) l);
++				l = this;
++			}
++		}
++		
+ 
+ 		public uint length ();
+ 		public List<unowned G> copy ();
+-- 
+2.37.3.windows.1
+
