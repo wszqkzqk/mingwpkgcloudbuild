@@ -1,0 +1,42 @@
+From 5b893dda4e99816e5b00569ade1322dd272c26a0 Mon Sep 17 00:00:00 2001
+From: wszqkzqk <wszqkzqk@qq.com>
+Date: Thu, 29 Sep 2022 22:23:08 +0800
+Subject: [PATCH] glib-2.0: Add `clear` method for GLib.List
+
+---
+ vapi/glib-2.0.vapi | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/vapi/glib-2.0.vapi b/vapi/glib-2.0.vapi
+index 497d6bb6c..301852e6b 100644
+--- a/vapi/glib-2.0.vapi
++++ b/vapi/glib-2.0.vapi
+@@ -5166,6 +5166,25 @@ namespace GLib {
+ 			}
+ 			return this;
+ 		}
++		[ReturnsModifiedPointer ()]
++		public unowned List<G> clear () {
++			unowned List<G>? l = this;
++			while (l != null) {
++				delete_link ((!) l);
++				l = this;
++			}
++			return this;
++		}
++		[ReturnsModifiedPointer ()]
++		public unowned List<G> clear_full (FreeFunc? func) {
++			unowned List<G>? l = this;
++			while (l != null) {
++				func (((!) l).data);
++				delete_link ((!) l);
++				l = this;
++			}
++			return this;
++		}
+ 
+ 		public uint length ();
+ 		public List<unowned G> copy ();
+-- 
+2.37.3.windows.1
+

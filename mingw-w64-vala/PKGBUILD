@@ -20,17 +20,17 @@ depends=("${MINGW_PACKAGE_PREFIX}-glib2"
             echo "${MINGW_PACKAGE_PREFIX}-graphviz")) # Remove this workaround afer graphviz available
 source=(https://download.gnome.org/sources/${_realname}/${pkgver%.*}/${_realname}-${pkgver}.tar.xz
         0001-relocate-plugin-path.patch
-        0002-glib-2.0-Add-clear-method-to-List.patch)
+        0002-glib-2.0-Add-clear-method-for-GLib.List.patch)
 sha256sums=('e1066221bf7b89cb1fa7327a3888645cb33b604de3bf45aa81132fd040b699bf'
             '266756afe0fa2871800e2d4cbf5db5c9e9e68abd52f7f694f077c7e425bc2772'
-            '64d9f80d115977e5c54a7bb192f2378343b2df0c5bf0d2a188f410d622dc738d')
+            '982cb2a6f90ec170b1fcbbbb0994eeac1a598d77ca7cbf33b0ed4b4a23e71d38')
 
 prepare() {
   cd "${srcdir}"/${_realname}-${pkgver}
 
   # https://gitlab.gnome.org/GNOME/vala/-/issues/1302
   patch -p1 -i "${srcdir}/0001-relocate-plugin-path.patch"
-  patch -p1 -i "${srcdir}/0002-glib-2.0-Add-clear-method-to-List.patch"
+  patch -p1 -i "${srcdir}/0002-glib-2.0-Add-clear-method-for-GLib.List.patch"
 
   autoreconf -ivf
 }
