@@ -1,0 +1,125 @@
+From ebc28720597ae902134dc391e0d96aef767ca17a Mon Sep 17 00:00:00 2001
+From: colinkiama <colinkiama@gmail.com>
+Date: Sun, 31 Jul 2022 00:37:40 +0100
+Subject: [PATCH 1/5] libvaladoc: Inline rendering of hierarchy graphs when
+ using svg images
+
+Fixes https://gitlab.gnome.org/GNOME/vala/issues/1340
+---
+ libvaladoc/html/basicdoclet.vala | 31 +++++++++++++++++++++----------
+ valadoc/icons/devhelpstyle.css   |  8 ++++++++
+ valadoc/icons/style.css          |  9 +++++++++
+ valadoc/icons/wikistyle.css      |  9 +++++++++
+ 4 files changed, 47 insertions(+), 10 deletions(-)
+
+diff --git a/libvaladoc/html/basicdoclet.vala b/libvaladoc/html/basicdoclet.vala
+index 66f45338c..ab18684a4 100644
+--- a/libvaladoc/html/basicdoclet.vala
++++ b/libvaladoc/html/basicdoclet.vala
+@@ -1031,21 +1031,32 @@ public abstract class Valadoc.Html.BasicDoclet : Api.Visitor, Doclet {
+ 		if (element is Class || element is Interface || element is Struct) {
+ 			unowned string format = (settings.use_svg_images ? "svg" : "png");
+ 			var chart = new Charts.Hierarchy (image_factory, element);
+-			chart.save (this.get_img_path (element, format), format);
++			if (!settings.use_svg_images) {
++				chart.save (this.get_img_path (element, format), format);
++			}
+ 
+ 			writer.start_tag ("h2", {"class", css_title})
+ 				.text ("Object Hierarchy:")
+ 				.end_tag ("h2");
+ 
+-			writer.simple_tag ("img", {"class",
+-									   css_diagram,
+-									   "usemap",
+-									   "#"+element.get_full_name (),
+-									   "alt",
+-									   "Object hierarchy for %s".printf (element.name),
+-									   "src",
+-									   this.get_img_path_html (element, format)});
+-			writer.add_usemap (chart);
++			if (settings.use_svg_images) {
++				writer.start_tag ("div", {"class",
++					css_diagram,
++					"alt",
++					"Object hierarchy for %s".printf (element.name)})
++					.text ((string) chart.write_buffer (format))
++					.end_tag ("div");
++			} else {
++				writer.simple_tag ("img", {"class",
++					css_diagram,
++					"usemap",
++					"#%s".printf (element.get_full_name ()),
++					"alt",
++					"Object hierarchy for %s".printf (element.name),
++					"src",
++					this.get_img_path_html (element, format)});
++				writer.add_usemap (chart);
++			}
+ 		}
+ 	}
+ 
+diff --git a/valadoc/icons/devhelpstyle.css b/valadoc/icons/devhelpstyle.css
+index c28cdb095..3fd025e8b 100644
+--- a/valadoc/icons/devhelpstyle.css
++++ b/valadoc/icons/devhelpstyle.css
+@@ -14,8 +14,16 @@ ul.external_link {
+ 	border-style: none;
+ 	display: block;
+ 	margin: 0px auto;
++	text-align: center;
++}
++
++.graph .node text {
++	font-size: 14px;
+ }
+ 
++.graph .node a polygon {
++	fill: transparent;
++}
+ 
+ .main_notification {
+ 	padding-right: 10px;
+diff --git a/valadoc/icons/style.css b/valadoc/icons/style.css
+index 61d584c9e..5a16f6def 100644
+--- a/valadoc/icons/style.css
++++ b/valadoc/icons/style.css
+@@ -27,6 +27,15 @@ ul.external_link {
+ 	border-style: none;
+ 	display: block;
+ 	margin: 0px auto;
++	text-align: center;
++}
++
++.graph .node text {
++	font-size: 14px;
++}
++
++.graph .node a polygon {
++	fill: transparent;
+ }
+ 
+ .site_navi {
+diff --git a/valadoc/icons/wikistyle.css b/valadoc/icons/wikistyle.css
+index 9b66ff8b1..01ce609e7 100644
+--- a/valadoc/icons/wikistyle.css
++++ b/valadoc/icons/wikistyle.css
+@@ -10,6 +10,15 @@ ul.external_link {
+ 	display: block;
+ 	margin: 0px auto;
+ 	width: 100px;
++	text-align: center;
++}
++
++.graph .node text {
++	font-size: 14px;
++}
++
++.graph .node a polygon {
++	fill: transparent;
+ }
+ 
+ .site_navi {
+-- 
+2.38.0.windows.1
+

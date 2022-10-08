@@ -1,0 +1,31 @@
+From 9c68d2ab18dd8ecac9c6478f8c0c2f97a0a8aede Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
+Date: Sun, 28 Aug 2022 23:29:51 +0800
+Subject: [PATCH 5/5] Adapt Unix filenames with `\`
+
+---
+ ccode/valaccodelinedirective.vala | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/ccode/valaccodelinedirective.vala b/ccode/valaccodelinedirective.vala
+index c5e61114b..6b121ce43 100644
+--- a/ccode/valaccodelinedirective.vala
++++ b/ccode/valaccodelinedirective.vala
+@@ -37,7 +37,13 @@ public class Vala.CCodeLineDirective : CCodeNode {
+ 	public int line_number { get; set; }
+ 
+ 	public CCodeLineDirective (string _filename, int _line) {
+-		filename = _filename;
++		if (Path.DIR_SEPARATOR == '/') {
++			string[] components = _filename.split ("""\""");
++			filename = string.joinv ("""\\""", components);
++		}
++		else {
++			filename = _filename;
++		}
+ 		line_number = _line;
+ 	}
+ 
+-- 
+2.38.0.windows.1
+

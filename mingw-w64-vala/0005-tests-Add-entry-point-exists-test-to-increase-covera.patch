@@ -1,0 +1,41 @@
+From 9c8a449155c7bd36670ced5fbc98834592a3a65f Mon Sep 17 00:00:00 2001
+From: Rico Tzschichholz <ricotz@ubuntu.com>
+Date: Wed, 17 Aug 2022 10:31:41 +0200
+Subject: [PATCH 4/5] tests: Add "entry point exists" test to increase coverage
+
+---
+ tests/Makefile.am                    | 1 +
+ tests/methods/main-entry-exists.test | 9 +++++++++
+ 2 files changed, 10 insertions(+)
+ create mode 100644 tests/methods/main-entry-exists.test
+
+diff --git a/tests/Makefile.am b/tests/Makefile.am
+index f549040d8..dd6f39684 100644
+--- a/tests/Makefile.am
++++ b/tests/Makefile.am
+@@ -245,6 +245,7 @@ TESTS = \
+ 	methods/argument-named.vala \
+ 	methods/delegate-target.vala \
+ 	methods/generics.vala \
++	methods/main-entry-exists.test \
+ 	methods/nowrapper-interface.vala \
+ 	methods/nowrapper-no-vfunc.test \
+ 	methods/parameter-ccode-type.vala \
+diff --git a/tests/methods/main-entry-exists.test b/tests/methods/main-entry-exists.test
+new file mode 100644
+index 000000000..8681446cf
+--- /dev/null
++++ b/tests/methods/main-entry-exists.test
+@@ -0,0 +1,9 @@
++Invalid Code
++
++namespace Foo {
++	public static void main () {
++	}
++}
++
++void main () {
++}
+-- 
+2.38.0.windows.1
+

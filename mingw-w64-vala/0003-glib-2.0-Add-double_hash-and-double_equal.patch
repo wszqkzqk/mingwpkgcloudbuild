@@ -1,0 +1,29 @@
+From c6d4ee9760f3a09d50cd5e60cff1ec3afff0f879 Mon Sep 17 00:00:00 2001
+From: wszqkzqk <wszqkzqk@qq.com>
+Date: Sun, 25 Sep 2022 21:53:21 +0800
+Subject: [PATCH 2/5] glib-2.0: Add `double_hash` and `double_equal`
+
+---
+ vapi/glib-2.0.vapi | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/vapi/glib-2.0.vapi b/vapi/glib-2.0.vapi
+index 88ca6a71f..497d6bb6c 100644
+--- a/vapi/glib-2.0.vapi
++++ b/vapi/glib-2.0.vapi
+@@ -5621,6 +5621,12 @@ namespace GLib {
+ 	public static GLib.HashFunc<void*> direct_hash;
+ 	[CCode (cname = "g_direct_equal")]
+ 	public static GLib.EqualFunc<void*> direct_equal;
++	[Version (since = "2.22")]
++	[CCode (cname = "g_double_hash")]
++	public static GLib.HashFunc<double?> double_hash;
++	[Version (since = "2.22")]
++	[CCode (cname = "g_double_equal")]
++	public static GLib.EqualFunc<double?> double_equal;
+ 	[CCode (cname = "g_int64_hash")]
+ 	public static GLib.HashFunc<int64?> int64_hash;
+ 	[Version (since = "2.22")]
+-- 
+2.38.0.windows.1
+

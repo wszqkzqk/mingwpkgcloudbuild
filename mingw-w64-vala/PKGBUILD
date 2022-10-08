@@ -1,0 +1,71 @@
+# Maintainer: Alexey Pavlov <alexpux@gmail.com>
+
+_realname=vala
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=0.56.3
+pkgrel=1
+pkgdesc="Compiler for the GObject type system (mingw-w64)"
+arch=('any')
+mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clang32' 'clangarm64')
+url="https://wiki.gnome.org/Projects/Vala"
+license=("LGPL")
+makedepends=("help2man"
+             "${MINGW_PACKAGE_PREFIX}-libxslt"
+             "${MINGW_PACKAGE_PREFIX}-autotools"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-vala")
+depends=("${MINGW_PACKAGE_PREFIX}-glib2"
+          $([[ ${MINGW_PACKAGE_PREFIX} == *-clang-aarch64* ]] || \
+            echo "${MINGW_PACKAGE_PREFIX}-graphviz")) # Remove this workaround afer graphviz available
+source=(https://download.gnome.org/sources/${_realname}/${pkgver%.*}/${_realname}-${pkgver}.tar.xz
+        0001-relocate-plugin-path.patch
+        0002-libvaladoc-Inline-rendering-of-hierarchy-graphs-when.patch
+        0003-glib-2.0-Add-double_hash-and-double_equal.patch
+        0004-gtk4-Make-Gtk.show_uri_full-an-instance-method-of-Gt.patch
+        0005-tests-Add-entry-point-exists-test-to-increase-covera.patch
+        0006-Adapt-Unix-filenames-with.patch
+        )
+sha256sums=('e1066221bf7b89cb1fa7327a3888645cb33b604de3bf45aa81132fd040b699bf'
+            '266756afe0fa2871800e2d4cbf5db5c9e9e68abd52f7f694f077c7e425bc2772'
+            '8ac9b73364c57ab7e80b4e6f5dd904957effd6dedfdf18752e43e06f1a97d316'
+            '9ec6d7bed0f375346dc6cf06c6d1044ada48cae974fdb05980099c61a70ca3de'
+            '1ea1712914f684779600db67d7e25939ea2d9d4ea0fd5fe26ad4d33ad7d13de0'
+            '5afdfed105416b9167faee185a70c7e9cac5f0fa2193c16d048e77ae17d2b875'
+            '4af7bb52e854ec4913cb9360944dfedcabba1bcc10f0ef3148f2a7d2fcdd97ef')
+
+prepare() {
+  cd "${srcdir}"/${_realname}-${pkgver}
+
+  # https://gitlab.gnome.org/GNOME/vala/-/issues/1302
+  patch -p1 -i "${srcdir}/0001-relocate-plugin-path.patch"
+
+  autoreconf -ivf
+}
+
+build() {
+  [[ -d "${srcdir}/build-${MSYSTEM}" ]] && rm -rf "${srcdir}/build-${MSYSTEM}"
+  mkdir -p "${srcdir}/build-${MSYSTEM}" && cd "${srcdir}/build-${MSYSTEM}"
+
+  CFLAGS+=" -Wno-incompatible-pointer-types" \
+  ../${_realname}-${pkgver}/configure \
+    --prefix=${MINGW_PREFIX} \
+    --build=${MINGW_CHOST} \
+    --host=${MINGW_CHOST} \
+    --enable-shared \
+    $([[ ${MINGW_PACKAGE_PREFIX} == *-clang-aarch64* ]] && \
+      echo "--disable-valadoc" || true) # Remove this workaround afer graphviz available
+
+  make
+}
+
+package() {
+  cd "${srcdir}/build-${MSYSTEM}"
+  make DESTDIR="${pkgdir}" install
+
+  # Move libvalaccodegen.dll to correct directory
+  mv "${pkgdir}${MINGW_PREFIX}"/lib/bin/libvalaccodegen.dll "${pkgdir}${MINGW_PREFIX}"/bin/libvalaccodegen.dll
+  rm -rf "${pkgdir}${MINGW_PREFIX}"/lib/bin
+
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/COPYING" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING"
+}
