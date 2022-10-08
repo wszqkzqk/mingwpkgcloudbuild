@@ -30,7 +30,8 @@ source=("https://download.gnome.org/sources/glib/${pkgver%.*}/glib-${pkgver}.tar
         0002-disable_glib_compile_schemas_warning.patch
         0004-disable-explicit-ms-bitfields.patch
         0005-gthread-fix-casting.patch
-        0006-Optional-optimization-for-g_int64_hash.patch
+        0006-Optimize-g_double_hash-implementation.patch
+        0007-Optional-optimization-for-g_int64_hash.patch
         glib-compile-schemas.hook.in
         gio-querymodules.hook.in
         pyscript2exe.py)
@@ -62,7 +63,8 @@ prepare() {
   apply_patch_with_msg 0002-disable_glib_compile_schemas_warning.patch
   apply_patch_with_msg 0004-disable-explicit-ms-bitfields.patch
   apply_patch_with_msg 0005-gthread-fix-casting.patch
-  apply_patch_with_msg 0006-Optional-optimization-for-g_int64_hash.patch
+  apply_patch_with_msg 0006-Optimize-g_double_hash-implementation.patch
+  apply_patch_with_msg 0007-Optional-optimization-for-g_int64_hash.patch
 }
 
 build() {
