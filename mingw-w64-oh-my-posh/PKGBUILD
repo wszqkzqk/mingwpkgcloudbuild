@@ -1,6 +1,7 @@
 # Maintainer: wszqkzqk <wszqkzqk@qq.com>
 _realname=oh-my-posh
 pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
 pkgver=12.6.5
 pkgrel=1
 pkgdesc="A prompt theme engine for any shell."
