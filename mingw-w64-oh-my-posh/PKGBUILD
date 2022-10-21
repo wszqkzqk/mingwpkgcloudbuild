@@ -20,19 +20,19 @@ sha256sums=('c7d4633d443d1fa2ea5a9d5efcad784bba123c6a6d94da3b2330b51be94bcbf7'
             'a5308c4e51268229a039ec4ec9a251a4cdb89d9380383e6e13aeba64a74f19ad')
 source=(
     https://github.com/JanDeDobbeleer/oh-my-posh/archive/refs/tags/v${pkgver}.tar.gz
-    "themes-${sha256sums[0]}.zip::https://github.com/JanDeDobbeleer/oh-my-posh/releases/download/v$pkgver/themes.zip"
-    "LICENSE-${sha256sums[1]}::https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/v${pkgver}/COPYING"
+    "themes-${sha256sums[1]}.zip::https://github.com/JanDeDobbeleer/oh-my-posh/releases/download/v$pkgver/themes.zip"
+    "LICENSE-${sha256sums[2]}::https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/v${pkgver}/COPYING"
 )
 noextract=('themes.zip')
 
 package() {
-    install -Dm 644 "LICENSE-${sha256sums[1]}" -t "${pkgdir}${MINGW_PREFIX}/share/licenses/${pkgname}/"
+    install -Dm 644 "LICENSE-${sha256sums[2]}" -t "${pkgdir}${MINGW_PREFIX}/share/licenses/${pkgname}/"
 
     cd "${srcdir}/oh-my-posh-${pkgver}/src"
     go build
-    install -Dm 755 ./oh-my-posh -t "${pkgdir}/usr/bin/"
+    install -Dm 755 ./oh-my-posh -t "${pkgdir}${MINGW_PREFIX}/bin/"
 
     mkdir -p "${pkgdir}${MINGW_PREFIX}/share/oh-my-posh/themes"
-    unzip "${srcdir}/themes-${sha256sums}.zip" -d "${pkgdir}${MINGW_PREFIX}/share/oh-my-posh/themes"
+    unzip "${srcdir}/themes-${sha256sums[1]}.zip" -d "${pkgdir}${MINGW_PREFIX}/share/oh-my-posh/themes"
     find "${pkgdir}${MINGW_PREFIX}/share/oh-my-posh/themes" -type f -exec chmod 644 "{}" \;
 }
