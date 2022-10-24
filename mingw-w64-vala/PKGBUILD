@@ -24,13 +24,15 @@ source=(https://download.gnome.org/sources/${_realname}/${pkgver%.*}/${_realname
         0003-glib-2.0-Add-double_hash-and-double_equal.patch
         0005-tests-Add-entry-point-exists-test-to-increase-covera.patch
         0006-Adapt-Unix-filenames-with.patch
+        0007-Support-the-underscore-separates-digits-in-numbers.patch
         )
 sha256sums=('e1066221bf7b89cb1fa7327a3888645cb33b604de3bf45aa81132fd040b699bf'
             '266756afe0fa2871800e2d4cbf5db5c9e9e68abd52f7f694f077c7e425bc2772'
             '8ac9b73364c57ab7e80b4e6f5dd904957effd6dedfdf18752e43e06f1a97d316'
             '9ec6d7bed0f375346dc6cf06c6d1044ada48cae974fdb05980099c61a70ca3de'
             '5afdfed105416b9167faee185a70c7e9cac5f0fa2193c16d048e77ae17d2b875'
-            '4af7bb52e854ec4913cb9360944dfedcabba1bcc10f0ef3148f2a7d2fcdd97ef')
+            '4af7bb52e854ec4913cb9360944dfedcabba1bcc10f0ef3148f2a7d2fcdd97ef'
+            '27a2c51bff729183fbc054b9a252f271a56edd78c6b2fb1a40a65f9bd4589861')
 
 prepare() {
   cd "${srcdir}"/${_realname}-${pkgver}
@@ -42,6 +44,7 @@ prepare() {
   patch -p1 -i "${srcdir}/0003-glib-2.0-Add-double_hash-and-double_equal.patch"
   patch -p1 -i "${srcdir}/0005-tests-Add-entry-point-exists-test-to-increase-covera.patch"
   patch -p1 -i "${srcdir}/0006-Adapt-Unix-filenames-with.patch"
+  patch -p1 -i "${srcdir}/0007-Support-the-underscore-separates-digits-in-numbers.patch"
 
   autoreconf -ivf
 }
