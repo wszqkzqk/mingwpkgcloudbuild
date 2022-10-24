@@ -1,12 +1,44 @@
-From 1a700e863b008a5bf5dabca005b14be5c1163b76 Mon Sep 17 00:00:00 2001
+From 59020c6d6aaf6b97e930ef7b86a7f713b4e7a95b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
-Date: Mon, 24 Oct 2022 23:26:55 +0800
+Date: Tue, 25 Oct 2022 00:07:41 +0800
 Subject: [PATCH] Support the underscore separates digits in numbers
 
 ---
- vala/valascanner.vala | 60 +++++++++++++++++++++++++++++++++++++------
- 1 file changed, 52 insertions(+), 8 deletions(-)
+ vala/valaintegerliteral.vala |  4 +++
+ vala/valarealliteral.vala    |  4 +++
+ vala/valascanner.vala        | 60 +++++++++++++++++++++++++++++++-----
+ 3 files changed, 60 insertions(+), 8 deletions(-)
 
+diff --git a/vala/valaintegerliteral.vala b/vala/valaintegerliteral.vala
+index e28960126..4fc8e890b 100644
+--- a/vala/valaintegerliteral.vala
++++ b/vala/valaintegerliteral.vala
+@@ -66,6 +66,10 @@ public class Vala.IntegerLiteral : Literal {
+ 
+ 		checked = true;
+ 
++		// Support the underscore symbol separates digits in number values
++		string[] components = value.split ("_");
++		value = string.joinv("", components);
++
+ 		int l = 0;
+ 		while (value.has_suffix ("l") || value.has_suffix ("L")) {
+ 			l++;
+diff --git a/vala/valarealliteral.vala b/vala/valarealliteral.vala
+index 2924cd764..308e5167d 100644
+--- a/vala/valarealliteral.vala
++++ b/vala/valarealliteral.vala
+@@ -64,6 +64,10 @@ public class Vala.RealLiteral : Literal {
+ 
+ 		checked = true;
+ 
++		// Support the underscore symbol separates digits in number values
++		string[] components = value.split ("_");
++		value = string.joinv("", components);
++
+ 		string type_name;
+ 		if (value.has_suffix ("f") || value.has_suffix ("F")) {
+ 			type_name ="float";
 diff --git a/vala/valascanner.vala b/vala/valascanner.vala
 index daeb97feb..32cd37fe3 100644
 --- a/vala/valascanner.vala
@@ -97,4 +129,3 @@ index daeb97feb..32cd37fe3 100644
  
 -- 
 2.38.1.windows.1
-

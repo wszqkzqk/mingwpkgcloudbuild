@@ -32,7 +32,7 @@ sha256sums=('e1066221bf7b89cb1fa7327a3888645cb33b604de3bf45aa81132fd040b699bf'
             '9ec6d7bed0f375346dc6cf06c6d1044ada48cae974fdb05980099c61a70ca3de'
             '5afdfed105416b9167faee185a70c7e9cac5f0fa2193c16d048e77ae17d2b875'
             '4af7bb52e854ec4913cb9360944dfedcabba1bcc10f0ef3148f2a7d2fcdd97ef'
-            '27a2c51bff729183fbc054b9a252f271a56edd78c6b2fb1a40a65f9bd4589861')
+            '1548251eb926714bbd260a6af933eda950708638ea0853ad51bd21d8985b2a8f')
 
 prepare() {
   cd "${srcdir}"/${_realname}-${pkgver}
