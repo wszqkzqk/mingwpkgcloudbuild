@@ -21,12 +21,10 @@ depends=("${MINGW_PACKAGE_PREFIX}-glib2"
 source=(https://download.gnome.org/sources/${_realname}/${pkgver%.*}/${_realname}-${pkgver}.tar.xz
         0001-relocate-plugin-path.patch
         0002-squash-wszqkzqk.patch
-        0003-squash-wszqkzqk.patch
         )
 sha256sums=('e1066221bf7b89cb1fa7327a3888645cb33b604de3bf45aa81132fd040b699bf'
             '266756afe0fa2871800e2d4cbf5db5c9e9e68abd52f7f694f077c7e425bc2772'
-            '6ec63096d819461bea624704cb4553d63533fbc5e220d2861ece9e3df9102b73'
-            '95317e6f9209fbad53c3179f7cdc02d4836a15c4aab6078b0b445f9a4c026597')
+            'b4ca390dfad84522752d2450a3c0213efe6fc744e078f786bd84d80f1cb02f56')
 
 prepare() {
   cd "${srcdir}"/${_realname}-${pkgver}
@@ -35,7 +33,6 @@ prepare() {
   patch -p1 -i "${srcdir}/0001-relocate-plugin-path.patch"
 
   patch -p1 -i "${srcdir}/0002-squash-wszqkzqk.patch"
-  patch -p1 -i "${srcdir}/0003-squash-wszqkzqk.patch"
 
   autoreconf -ivf
 }
