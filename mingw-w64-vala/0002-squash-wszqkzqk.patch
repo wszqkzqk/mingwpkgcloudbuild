@@ -1,0 +1,80 @@
+From 67f2d7da40f81d73cf7e87c24227f227f84acd82 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
+Date: Tue, 25 Oct 2022 21:02:32 +0800
+Subject: [PATCH 1/2] scanner: fail when exponent has nodigits
+
+---
+ vala/valascanner.vala | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/vala/valascanner.vala b/vala/valascanner.vala
+index daeb97feb..8c3bb7fe0 100644
+--- a/vala/valascanner.vala
++++ b/vala/valascanner.vala
+@@ -626,10 +626,10 @@ public class Vala.Scanner {
+ 		}
+ 
+ 		// exponent part
+-		if (current < end && current[0].tolower () == 'e') {
++		if (current < end - 1 && current[0].tolower () == 'e') {
+ 			type = TokenType.REAL_LITERAL;
+ 			current++;
+-			if (current < end && (current[0] == '+' || current[0] == '-')) {
++			if (current < end - 1 && (current[0] == '+' || current[0] == '-')) {
+ 				current++;
+ 			}
+ 			while (current < end && current[0].isdigit ()) {
+-- 
+2.38.1.windows.1
+
+
+From c92ea3ee54b3b8cdb62f855a83228784c635d757 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
+Date: Tue, 25 Oct 2022 21:02:55 +0800
+Subject: [PATCH 2/2] tests: Add tests for exponent has nodigits
+
+---
+ tests/scanner/number_exponent_has_no_digits.test  | 5 +++++
+ tests/scanner/number_exponent_has_no_digits2.test | 5 +++++
+ tests/scanner/number_exponent_has_no_digits3.test | 5 +++++
+ 3 files changed, 15 insertions(+)
+ create mode 100644 tests/scanner/number_exponent_has_no_digits.test
+ create mode 100644 tests/scanner/number_exponent_has_no_digits2.test
+ create mode 100644 tests/scanner/number_exponent_has_no_digits3.test
+
+diff --git a/tests/scanner/number_exponent_has_no_digits.test b/tests/scanner/number_exponent_has_no_digits.test
+new file mode 100644
+index 000000000..fbe418a07
+--- /dev/null
++++ b/tests/scanner/number_exponent_has_no_digits.test
+@@ -0,0 +1,5 @@
++Invalid Code
++
++void main () {
++	double foo = 18.93e;
++}
+diff --git a/tests/scanner/number_exponent_has_no_digits2.test b/tests/scanner/number_exponent_has_no_digits2.test
+new file mode 100644
+index 000000000..b0d48fa09
+--- /dev/null
++++ b/tests/scanner/number_exponent_has_no_digits2.test
+@@ -0,0 +1,5 @@
++Invalid Code
++
++void main () {
++	double foo = 20.03e+;
++}
+diff --git a/tests/scanner/number_exponent_has_no_digits3.test b/tests/scanner/number_exponent_has_no_digits3.test
+new file mode 100644
+index 000000000..0256423ef
+--- /dev/null
++++ b/tests/scanner/number_exponent_has_no_digits3.test
+@@ -0,0 +1,5 @@
++Invalid Code
++
++void main () {
++	double foo = 7.11e-;
++}
+-- 
+2.38.1.windows.1
+
