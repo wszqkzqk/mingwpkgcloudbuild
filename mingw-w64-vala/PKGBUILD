@@ -25,8 +25,8 @@ source=(https://download.gnome.org/sources/${_realname}/${pkgver%.*}/${_realname
         )
 sha256sums=('e1066221bf7b89cb1fa7327a3888645cb33b604de3bf45aa81132fd040b699bf'
             '266756afe0fa2871800e2d4cbf5db5c9e9e68abd52f7f694f077c7e425bc2772'
-            '0a5106cb8ac0a7f3e924c7c2a06585ec6ee47d4b1aec61effb502ee1f4dbfd61'
-            'fe8ae3fc68e6c517e776d9ffa76510b092dd2cc883531041fa78ee5e21a91b21')
+            '6ec63096d819461bea624704cb4553d63533fbc5e220d2861ece9e3df9102b73'
+            '95317e6f9209fbad53c3179f7cdc02d4836a15c4aab6078b0b445f9a4c026597')
 
 prepare() {
   cd "${srcdir}"/${_realname}-${pkgver}
