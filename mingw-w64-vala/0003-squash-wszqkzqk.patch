@@ -1,14 +1,14 @@
-From dc57f473a9aee4423b24c50fd6dc4c43f47e1027 Mon Sep 17 00:00:00 2001
+From c41dd2be3ce241c7c8fe47a506eb1edd8891394e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
-Date: Fri, 28 Oct 2022 20:26:15 +0800
+Date: Fri, 28 Oct 2022 20:55:04 +0800
 Subject: [PATCH] add support for verbatim template string
 
 ---
- vala/valascanner.vala | 44 +++++++++++++++++++++++++++++++++----------
- 1 file changed, 34 insertions(+), 10 deletions(-)
+ vala/valascanner.vala | 45 +++++++++++++++++++++++++++++++++----------
+ 1 file changed, 35 insertions(+), 10 deletions(-)
 
 diff --git a/vala/valascanner.vala b/vala/valascanner.vala
-index daeb97feb..b7b743e7d 100644
+index daeb97feb..d47db4c29 100644
 --- a/vala/valascanner.vala
 +++ b/vala/valascanner.vala
 @@ -54,7 +54,8 @@ public class Vala.Scanner {
@@ -41,7 +41,7 @@ index daeb97feb..b7b743e7d 100644
  		TokenType type;
  		char* begin = current;
  		token_begin = SourceLocation (begin, line, column);
-@@ -697,9 +702,20 @@ public class Vala.Scanner {
+@@ -697,9 +702,21 @@ public class Vala.Scanner {
  		} else {
  			switch (current[0]) {
  			case '"':
@@ -54,6 +54,7 @@ index daeb97feb..b7b743e7d 100644
 +						current += 3;
 +						state_stack.length--;
 +					} else {
++						type = TokenType.TEMPLATE_STRING_LITERAL;
 +						current++;
 +						token_length_in_chars++;
 +					}
@@ -65,7 +66,7 @@ index daeb97feb..b7b743e7d 100644
  				break;
  			case '$':
  				token_begin.pos++; // $ is not part of following token
-@@ -723,14 +739,14 @@ public class Vala.Scanner {
+@@ -723,14 +740,14 @@ public class Vala.Scanner {
  					state_stack += State.TEMPLATE_PART;
  				} else {
  					Report.error (get_source_reference (1), "unexpected character");
@@ -82,7 +83,7 @@ index daeb97feb..b7b743e7d 100644
  						current++;
  						token_length_in_chars++;
  						if (current >= end) {
-@@ -830,7 +846,9 @@ public class Vala.Scanner {
+@@ -830,7 +847,9 @@ public class Vala.Scanner {
  
  	public TokenType read_token (out SourceLocation token_begin, out SourceLocation token_end) {
  		if (in_template ()) {
@@ -93,7 +94,7 @@ index daeb97feb..b7b743e7d 100644
  		} else if (in_template_part ()) {
  			state_stack.length--;
  
-@@ -861,9 +879,15 @@ public class Vala.Scanner {
+@@ -861,9 +880,15 @@ public class Vala.Scanner {
  			type = get_identifier_or_keyword (begin, len);
  		} else if (current[0] == '@') {
  			if (current < end - 1 && current[1] == '"') {
