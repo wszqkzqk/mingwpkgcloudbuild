@@ -1,102 +1,324 @@
-From 6fe9ab715276f0a027b63fbb91a060ba0434672c Mon Sep 17 00:00:00 2001
+From 2b69b8accac817f23bd51ca41d14deec131d83c5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
-Date: Tue, 25 Oct 2022 22:51:35 +0800
-Subject: [PATCH 1/2] Squashed commit of the following:
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Date: Tue, 25 Oct 2022 21:02:32 +0800
+Subject: [PATCH 1/8] vala: Report error in real literal if exponent has no
+ digits
 
-commit 4fb99ad01d8e5940949ebf5c77fc6c22b5a6805c
-Author: 星外之神 <wszqkzqk@qq.com>
-Date:   Tue Oct 25 20:59:55 2022 +0800
-
-    Revert "fail when exponent has no digits"
-
-    This reverts commit 55a000fa8c90e6eec2bcce60f5879b0d096725be.
-
-commit 6fe03f90ff7c9d57b0696f6ad78457254561580d
-Author: 星外之神 <wszqkzqk@qq.com>
-Date:   Tue Oct 25 20:59:52 2022 +0800
-
-    Revert "tests: Add some exponent has no digit tests"
-
-    This reverts commit 0da71c5baa4f4b860641d1aac08b97406db4eb83.
-
-commit 0da71c5baa4f4b860641d1aac08b97406db4eb83
-Author: 星外之神 <wszqkzqk@qq.com>
-Date:   Tue Oct 25 20:29:56 2022 +0800
-
-    tests: Add some exponent has no digit tests
-
-commit e51f354bded99a49d2399e75fc74cb8a872c1e8c
-Merge: 55a000fa8 f855c2910
-Author: 星外之神 <wszqkzqk@qq.com>
-Date:   Tue Oct 25 20:18:06 2022 +0800
-
-    Merge branch 'underscore_separates' of gitlab.gnome.org:wszqkzqk/vala into underscore_separates
-
-commit 55a000fa8c90e6eec2bcce60f5879b0d096725be
-Author: 星外之神 <wszqkzqk@qq.com>
-Date:   Tue Oct 25 20:17:51 2022 +0800
-
-    fail when exponent has no digits
-
-commit f855c291059781327ac8f5f65403a148d22dc8f3
-Author: Rico Tzschichholz <ricotz@ubuntu.com>
-Date:   Tue Oct 25 12:57:08 2022 +0200
-
-    tests: More tests
-
-commit d03e48ea8dab713de3c01be825c5916182dd058f
-Author: wszqkzqk <wszqkzqk@qq.com>
-Date:   Tue Oct 25 18:35:52 2022 +0800
-
-    fix the wrong use of isxdigit
-
-commit 6473975a17a73482ca12700337c6944ea34058da
-Author: Rico Tzschichholz <ricotz@ubuntu.com>
-Date:   Tue Oct 25 08:27:04 2022 +0200
-
-    tests: Add some underscore separated number tests
-
-commit 0d949cfcfdf05275734629e9340da1e60c930dcc
-Author: 星外之神 <wszqkzqk@qq.com>
-Date:   Tue Oct 25 00:27:56 2022 +0800
-
-    genie: Support underscores separate  in numbers
-
-commit 59020c6d6aaf6b97e930ef7b86a7f713b4e7a95b
-Author: 星外之神 <wszqkzqk@qq.com>
-Date:   Tue Oct 25 00:07:41 2022 +0800
-
-    Support the underscore separates digits in numbers
 ---
- tests/Makefile.am                             |  5 ++
- .../number_underscore_separated.c-expected    | 30 ++++++++++
- .../scanner/number_underscore_separated.vala  |  6 ++
- .../number_underscore_separated_invalid.test  |  5 ++
- .../number_underscore_separated_invalid2.test |  5 ++
- .../number_underscore_separated_invalid3.test |  5 ++
- .../number_underscore_separated_invalid4.test |  5 ++
- .../number_underscore_separated_invalid5.test |  5 ++
- vala/valageniescanner.vala                    | 60 ++++++++++++++++---
- vala/valaintegerliteral.vala                  |  4 ++
- vala/valarealliteral.vala                     |  4 ++
- vala/valascanner.vala                         | 60 ++++++++++++++++---
- 12 files changed, 178 insertions(+), 16 deletions(-)
- create mode 100644 tests/scanner/number_underscore_separated.c-expected
+ tests/Makefile.am                                       | 3 +++
+ tests/semantic/realliteral-exponent-has-no-digits.test  | 5 +++++
+ tests/semantic/realliteral-exponent-has-no-digits2.test | 5 +++++
+ tests/semantic/realliteral-exponent-has-no-digits3.test | 5 +++++
+ vala/valarealliteral.vala                               | 5 +++++
+ 5 files changed, 23 insertions(+)
+ create mode 100644 tests/semantic/realliteral-exponent-has-no-digits.test
+ create mode 100644 tests/semantic/realliteral-exponent-has-no-digits2.test
+ create mode 100644 tests/semantic/realliteral-exponent-has-no-digits3.test
+
+diff --git a/tests/Makefile.am b/tests/Makefile.am
+index 6a2acf56c..10ff6183f 100644
+--- a/tests/Makefile.am
++++ b/tests/Makefile.am
+@@ -1243,6 +1243,9 @@ TESTS = \
+ 	semantic/property-too-few-type-arguments.test \
+ 	semantic/property-too-many-type-arguments.test \
+ 	semantic/property-void.test \
++	semantic/realliteral-exponent-has-no-digits.test \
++	semantic/realliteral-exponent-has-no-digits2.test \
++	semantic/realliteral-exponent-has-no-digits3.test \
+ 	semantic/reference-transfer-not-supported.test \
+ 	semantic/reference-transfer-unavailable.test \
+ 	semantic/return-in-nonvoid.test \
+diff --git a/tests/semantic/realliteral-exponent-has-no-digits.test b/tests/semantic/realliteral-exponent-has-no-digits.test
+new file mode 100644
+index 000000000..fbe418a07
+--- /dev/null
++++ b/tests/semantic/realliteral-exponent-has-no-digits.test
+@@ -0,0 +1,5 @@
++Invalid Code
++
++void main () {
++	double foo = 18.93e;
++}
+diff --git a/tests/semantic/realliteral-exponent-has-no-digits2.test b/tests/semantic/realliteral-exponent-has-no-digits2.test
+new file mode 100644
+index 000000000..b0d48fa09
+--- /dev/null
++++ b/tests/semantic/realliteral-exponent-has-no-digits2.test
+@@ -0,0 +1,5 @@
++Invalid Code
++
++void main () {
++	double foo = 20.03e+;
++}
+diff --git a/tests/semantic/realliteral-exponent-has-no-digits3.test b/tests/semantic/realliteral-exponent-has-no-digits3.test
+new file mode 100644
+index 000000000..0256423ef
+--- /dev/null
++++ b/tests/semantic/realliteral-exponent-has-no-digits3.test
+@@ -0,0 +1,5 @@
++Invalid Code
++
++void main () {
++	double foo = 7.11e-;
++}
+diff --git a/vala/valarealliteral.vala b/vala/valarealliteral.vala
+index 2924cd764..c992fba6f 100644
+--- a/vala/valarealliteral.vala
++++ b/vala/valarealliteral.vala
+@@ -71,6 +71,11 @@ public class Vala.RealLiteral : Literal {
+ 			type_name = "double";
+ 		}
+ 
++		if (value.has_suffix ("e") || value.has_suffix ("+") || value.has_suffix ("-")) {
++			Report.error (source_reference, "exponent has no digits");
++			error = true;
++		}
++
+ 		var st = (Struct) context.root.scope.lookup (type_name);
+ 		// ensure attributes are already processed
+ 		st.check (context);
+-- 
+2.38.1.windows.1
+
+
+From 8c7c136c475e05fe17915f2fa67f2259717e2ac7 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
+Date: Tue, 25 Oct 2022 00:07:41 +0800
+Subject: [PATCH 2/8] Support the underscore separates digits in numbers
+
+---
+ vala/valaintegerliteral.vala |  4 +++
+ vala/valarealliteral.vala    |  4 +++
+ vala/valascanner.vala        | 60 +++++++++++++++++++++++++++++++-----
+ 3 files changed, 60 insertions(+), 8 deletions(-)
+
+diff --git a/vala/valaintegerliteral.vala b/vala/valaintegerliteral.vala
+index e28960126..4fc8e890b 100644
+--- a/vala/valaintegerliteral.vala
++++ b/vala/valaintegerliteral.vala
+@@ -66,6 +66,10 @@ public class Vala.IntegerLiteral : Literal {
+ 
+ 		checked = true;
+ 
++		// Support the underscore symbol separates digits in number values
++		string[] components = value.split ("_");
++		value = string.joinv("", components);
++
+ 		int l = 0;
+ 		while (value.has_suffix ("l") || value.has_suffix ("L")) {
+ 			l++;
+diff --git a/vala/valarealliteral.vala b/vala/valarealliteral.vala
+index c992fba6f..4995cdd02 100644
+--- a/vala/valarealliteral.vala
++++ b/vala/valarealliteral.vala
+@@ -64,6 +64,10 @@ public class Vala.RealLiteral : Literal {
+ 
+ 		checked = true;
+ 
++		// Support the underscore symbol separates digits in number values
++		string[] components = value.split ("_");
++		value = string.joinv("", components);
++
+ 		string type_name;
+ 		if (value.has_suffix ("f") || value.has_suffix ("F")) {
+ 			type_name ="float";
+diff --git a/vala/valascanner.vala b/vala/valascanner.vala
+index daeb97feb..32cd37fe3 100644
+--- a/vala/valascanner.vala
++++ b/vala/valascanner.vala
+@@ -606,13 +606,35 @@ public class Vala.Scanner {
+ 		    && current[1] == 'x' && current[2].isxdigit ()) {
+ 			// hexadecimal integer literal
+ 			current += 2;
+-			while (current < end && current[0].isxdigit ()) {
+-				current++;
++			while (current < end) {
++				if (current[0].isxdigit ()) {
++					current += 1;
++				} else if (current[0] == '_') {
++					// Support the underscore symbol separates digits in number values
++					current += 1;
++					if ((current >= end) || (!(current[0].isxdigit ()))) {
++						current -= 1;
++						break;
++					}
++				} else {
++					break;
++				}
+ 			}
+ 		} else {
+ 			// decimal number
+-			while (current < end && current[0].isdigit ()) {
+-				current++;
++			while (current < end) {
++				if (current[0].isxdigit ()) {
++					current += 1;
++				} else if (current[0] == '_') {
++					// Support the underscore symbol separates digits in number values
++					current += 1;
++					if ((current >= end) || (!(current[0].isxdigit ()))) {
++						current -= 1;
++						break;
++					}
++				} else {
++					break;
++				}
+ 			}
+ 		}
+ 
+@@ -620,8 +642,19 @@ public class Vala.Scanner {
+ 		if (current < end - 1 && current[0] == '.' && current[1].isdigit ()) {
+ 			type = TokenType.REAL_LITERAL;
+ 			current++;
+-			while (current < end && current[0].isdigit ()) {
+-				current++;
++			while (current < end) {
++				if (current[0].isxdigit ()) {
++					current += 1;
++				} else if (current[0] == '_') {
++					// Support the underscore symbol separates digits in number values
++					current += 1;
++					if ((current >= end) || (!(current[0].isxdigit ()))) {
++						current -= 1;
++						break;
++					}
++				} else {
++					break;
++				}
+ 			}
+ 		}
+ 
+@@ -632,8 +665,19 @@ public class Vala.Scanner {
+ 			if (current < end && (current[0] == '+' || current[0] == '-')) {
+ 				current++;
+ 			}
+-			while (current < end && current[0].isdigit ()) {
+-				current++;
++			while (current < end) {
++				if (current[0].isxdigit ()) {
++					current += 1;
++				} else if (current[0] == '_') {
++					// Support the underscore symbol separates digits in number values
++					current += 1;
++					if ((current >= end) || (!(current[0].isxdigit ()))) {
++						current -= 1;
++						break;
++					}
++				} else {
++					break;
++				}
+ 			}
+ 		}
+ 
+-- 
+2.38.1.windows.1
+
+
+From 9a0acc61720194deb2f8032109d3fb3171ac39e0 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
+Date: Tue, 25 Oct 2022 00:27:56 +0800
+Subject: [PATCH 3/8] genie: Support underscores separate  in numbers
+
+---
+ vala/valageniescanner.vala | 45 +++++++++++++++++++++++++++++++++-----
+ 1 file changed, 39 insertions(+), 6 deletions(-)
+
+diff --git a/vala/valageniescanner.vala b/vala/valageniescanner.vala
+index ef54ae7d3..a8696d494 100644
+--- a/vala/valageniescanner.vala
++++ b/vala/valageniescanner.vala
+@@ -974,8 +974,19 @@ public class Vala.Genie.Scanner {
+ 				type = TokenType.IDENTIFIER;
+ 			}
+ 		} else if (current[0].isdigit ()) {
+-			while (current < end && current[0].isdigit ()) {
+-				current++;
++			while (current < end) {
++				if (current[0].isxdigit ()) {
++					current += 1;
++				} else if (current[0] == '_') {
++					// Support the underscore symbol separates digits in number values
++					current += 1;
++					if ((current >= end) || (!(current[0].isxdigit ()))) {
++						current -= 1;
++						break;
++					}
++				} else {
++					break;
++				}
+ 			}
+ 			type = TokenType.INTEGER_LITERAL;
+ 			if (current < end && current[0].tolower () == 'l') {
+@@ -993,16 +1004,38 @@ public class Vala.Genie.Scanner {
+ 				}
+ 			} else if (current < end - 1 && current[0] == '.' && current[1].isdigit ()) {
+ 				current++;
+-				while (current < end && current[0].isdigit ()) {
+-					current++;
++				while (current < end) {
++					if (current[0].isxdigit ()) {
++						current += 1;
++					} else if (current[0] == '_') {
++						// Support the underscore symbol separates digits in number values
++						current += 1;
++						if ((current >= end) || (!(current[0].isxdigit ()))) {
++							current -= 1;
++							break;
++						}
++					} else {
++						break;
++					}
+ 				}
+ 				if (current < end && current[0].tolower () == 'e') {
+ 					current++;
+ 					if (current < end && (current[0] == '+' || current[0] == '-')) {
+ 						current++;
+ 					}
+-					while (current < end && current[0].isdigit ()) {
+-						current++;
++					while (current < end) {
++						if (current[0].isxdigit ()) {
++							current += 1;
++						} else if (current[0] == '_') {
++							// Support the underscore symbol separates digits in number values
++							current += 1;
++							if ((current >= end) || (!(current[0].isxdigit ()))) {
++								current -= 1;
++								break;
++							}
++						} else {
++							break;
++						}
+ 					}
+ 				}
+ 				if (current < end && current[0].tolower () == 'f') {
+-- 
+2.38.1.windows.1
+
+
+From c2241589caa48fb9a88bc860a8ffedbb1ba57b14 Mon Sep 17 00:00:00 2001
+From: Rico Tzschichholz <ricotz@ubuntu.com>
+Date: Tue, 25 Oct 2022 08:27:04 +0200
+Subject: [PATCH 4/8] tests: Add some underscore separated number tests
+
+---
+ tests/Makefile.am                                       | 4 ++++
+ tests/scanner/number_underscore_separated.vala          | 5 +++++
+ tests/scanner/number_underscore_separated_invalid.test  | 5 +++++
+ tests/scanner/number_underscore_separated_invalid2.test | 5 +++++
+ tests/scanner/number_underscore_separated_invalid3.test | 5 +++++
+ 5 files changed, 24 insertions(+)
  create mode 100644 tests/scanner/number_underscore_separated.vala
  create mode 100644 tests/scanner/number_underscore_separated_invalid.test
  create mode 100644 tests/scanner/number_underscore_separated_invalid2.test
  create mode 100644 tests/scanner/number_underscore_separated_invalid3.test
- create mode 100644 tests/scanner/number_underscore_separated_invalid4.test
- create mode 100644 tests/scanner/number_underscore_separated_invalid5.test
 
 diff --git a/tests/Makefile.am b/tests/Makefile.am
-index 6a2acf56c..2bee76877 100644
+index 10ff6183f..564f8fabf 100644
 --- a/tests/Makefile.am
 +++ b/tests/Makefile.am
-@@ -890,6 +890,11 @@ TESTS = \
+@@ -890,6 +890,10 @@ TESTS = \
  	annotations/description.vala \
  	annotations/noaccessormethod.test \
  	scanner/comment-not-closed.test \
@@ -104,6 +326,255 @@ index 6a2acf56c..2bee76877 100644
 +	scanner/number_underscore_separated_invalid.test \
 +	scanner/number_underscore_separated_invalid2.test \
 +	scanner/number_underscore_separated_invalid3.test \
+ 	scanner/preprocessor-invalid.test \
+ 	scanner/preprocessor-missing-paren.test \
+ 	scanner/preprocessor-unexpected.test \
+diff --git a/tests/scanner/number_underscore_separated.vala b/tests/scanner/number_underscore_separated.vala
+new file mode 100644
+index 000000000..ae6b6b46c
+--- /dev/null
++++ b/tests/scanner/number_underscore_separated.vala
+@@ -0,0 +1,5 @@
++void main () {
++	double foo = 3.141_592_653_589_793_2f;
++	uint64 bar = 299_792_458ul;
++	int64 minim = -0x80_00_00_01LL;
++}
+diff --git a/tests/scanner/number_underscore_separated_invalid.test b/tests/scanner/number_underscore_separated_invalid.test
+new file mode 100644
+index 000000000..04c2018a3
+--- /dev/null
++++ b/tests/scanner/number_underscore_separated_invalid.test
+@@ -0,0 +1,5 @@
++Invalid Code
++
++void main () {
++	double foo = _3.141;
++}
+diff --git a/tests/scanner/number_underscore_separated_invalid2.test b/tests/scanner/number_underscore_separated_invalid2.test
+new file mode 100644
+index 000000000..3265172e5
+--- /dev/null
++++ b/tests/scanner/number_underscore_separated_invalid2.test
+@@ -0,0 +1,5 @@
++Invalid Code
++
++void main () {
++	double foo = 3._141;
++}
+diff --git a/tests/scanner/number_underscore_separated_invalid3.test b/tests/scanner/number_underscore_separated_invalid3.test
+new file mode 100644
+index 000000000..fde08221a
+--- /dev/null
++++ b/tests/scanner/number_underscore_separated_invalid3.test
+@@ -0,0 +1,5 @@
++Invalid Code
++
++void main () {
++	double foo = 3.14__1;
++}
+-- 
+2.38.1.windows.1
+
+
+From ebfafa970c5dd466d6e7e4079a82e3dc9c4ed5be Mon Sep 17 00:00:00 2001
+From: wszqkzqk <wszqkzqk@qq.com>
+Date: Tue, 25 Oct 2022 18:35:52 +0800
+Subject: [PATCH 5/8] fix the wrong use of isxdigit
+
+---
+ vala/valageniescanner.vala | 45 ++++++++++++++++++++++++--------------
+ vala/valascanner.vala      | 36 +++++++++++++++---------------
+ 2 files changed, 46 insertions(+), 35 deletions(-)
+
+diff --git a/vala/valageniescanner.vala b/vala/valageniescanner.vala
+index a8696d494..72e8398f1 100644
+--- a/vala/valageniescanner.vala
++++ b/vala/valageniescanner.vala
+@@ -975,13 +975,13 @@ public class Vala.Genie.Scanner {
+ 			}
+ 		} else if (current[0].isdigit ()) {
+ 			while (current < end) {
+-				if (current[0].isxdigit ()) {
+-					current += 1;
++				if (current[0].isdigit ()) {
++					current++;
+ 				} else if (current[0] == '_') {
+ 					// Support the underscore symbol separates digits in number values
+-					current += 1;
+-					if ((current >= end) || (!(current[0].isxdigit ()))) {
+-						current -= 1;
++					current++;
++					if ((current >= end) || (!(current[0].isdigit ()))) {
++						current--;
+ 						break;
+ 					}
+ 				} else {
+@@ -1005,13 +1005,13 @@ public class Vala.Genie.Scanner {
+ 			} else if (current < end - 1 && current[0] == '.' && current[1].isdigit ()) {
+ 				current++;
+ 				while (current < end) {
+-					if (current[0].isxdigit ()) {
+-						current += 1;
++					if (current[0].isdigit ()) {
++						current++;
+ 					} else if (current[0] == '_') {
+ 						// Support the underscore symbol separates digits in number values
+-						current += 1;
+-						if ((current >= end) || (!(current[0].isxdigit ()))) {
+-							current -= 1;
++						current++;
++						if ((current >= end) || (!(current[0].isdigit ()))) {
++							current--;
+ 							break;
+ 						}
+ 					} else {
+@@ -1024,13 +1024,13 @@ public class Vala.Genie.Scanner {
+ 						current++;
+ 					}
+ 					while (current < end) {
+-						if (current[0].isxdigit ()) {
+-							current += 1;
++						if (current[0].isdigit ()) {
++							current++;
+ 						} else if (current[0] == '_') {
+ 							// Support the underscore symbol separates digits in number values
+-							current += 1;
+-							if ((current >= end) || (!(current[0].isxdigit ()))) {
+-								current -= 1;
++							current++;
++							if ((current >= end) || (!(current[0].isdigit ()))) {
++								current--;
+ 								break;
+ 							}
+ 						} else {
+@@ -1046,8 +1046,19 @@ public class Vala.Genie.Scanner {
+ 					   && begin[0] == '0' && begin[1] == 'x' && begin[2].isxdigit ()) {
+ 				// hexadecimal integer literal
+ 				current++;
+-				while (current < end && current[0].isxdigit ()) {
+-					current++;
++				while (current < end) {
++					if (current[0].isxdigit ()) {
++						current++;
++					} else if (current[0] == '_') {
++						// Support the underscore symbol separates digits in number values
++						current++;
++						if ((current >= end) || (!(current[0].isxdigit ()))) {
++							current--;
++							break;
++						}
++					} else {
++						break;
++					}
+ 				}
+ 			} else if (current < end && is_ident_char (current[0])) {
+ 				// allow identifiers to start with a digit
+diff --git a/vala/valascanner.vala b/vala/valascanner.vala
+index 32cd37fe3..faa25834c 100644
+--- a/vala/valascanner.vala
++++ b/vala/valascanner.vala
+@@ -608,12 +608,12 @@ public class Vala.Scanner {
+ 			current += 2;
+ 			while (current < end) {
+ 				if (current[0].isxdigit ()) {
+-					current += 1;
++					current++;
+ 				} else if (current[0] == '_') {
+ 					// Support the underscore symbol separates digits in number values
+-					current += 1;
++					current++;
+ 					if ((current >= end) || (!(current[0].isxdigit ()))) {
+-						current -= 1;
++						current--;
+ 						break;
+ 					}
+ 				} else {
+@@ -623,13 +623,13 @@ public class Vala.Scanner {
+ 		} else {
+ 			// decimal number
+ 			while (current < end) {
+-				if (current[0].isxdigit ()) {
+-					current += 1;
++				if (current[0].isdigit ()) {
++					current++;
+ 				} else if (current[0] == '_') {
+ 					// Support the underscore symbol separates digits in number values
+-					current += 1;
+-					if ((current >= end) || (!(current[0].isxdigit ()))) {
+-						current -= 1;
++					current++;
++					if ((current >= end) || (!(current[0].isdigit ()))) {
++						current--;
+ 						break;
+ 					}
+ 				} else {
+@@ -643,13 +643,13 @@ public class Vala.Scanner {
+ 			type = TokenType.REAL_LITERAL;
+ 			current++;
+ 			while (current < end) {
+-				if (current[0].isxdigit ()) {
+-					current += 1;
++				if (current[0].isdigit ()) {
++					current++;
+ 				} else if (current[0] == '_') {
+ 					// Support the underscore symbol separates digits in number values
+-					current += 1;
+-					if ((current >= end) || (!(current[0].isxdigit ()))) {
+-						current -= 1;
++					current++;
++					if ((current >= end) || (!(current[0].isdigit ()))) {
++						current--;
+ 						break;
+ 					}
+ 				} else {
+@@ -666,13 +666,13 @@ public class Vala.Scanner {
+ 				current++;
+ 			}
+ 			while (current < end) {
+-				if (current[0].isxdigit ()) {
+-					current += 1;
++				if (current[0].isdigit ()) {
++					current++;
+ 				} else if (current[0] == '_') {
+ 					// Support the underscore symbol separates digits in number values
+-					current += 1;
+-					if ((current >= end) || (!(current[0].isxdigit ()))) {
+-						current -= 1;
++					current++;
++					if ((current >= end) || (!(current[0].isdigit ()))) {
++						current--;
+ 						break;
+ 					}
+ 				} else {
+-- 
+2.38.1.windows.1
+
+
+From c92403d7e34a6a27f6d87bb8d58f4d33e706d37c Mon Sep 17 00:00:00 2001
+From: Rico Tzschichholz <ricotz@ubuntu.com>
+Date: Tue, 25 Oct 2022 12:57:08 +0200
+Subject: [PATCH 6/8] tests: More tests
+
+---
+ tests/Makefile.am                             |  1 +
+ .../number_underscore_separated.c-expected    | 30 +++++++++++++++++++
+ .../scanner/number_underscore_separated.vala  |  5 ++--
+ .../number_underscore_separated_invalid4.test |  5 ++++
+ .../number_underscore_separated_invalid5.test |  5 ++++
+ 5 files changed, 44 insertions(+), 2 deletions(-)
+ create mode 100644 tests/scanner/number_underscore_separated.c-expected
+ create mode 100644 tests/scanner/number_underscore_separated_invalid4.test
+ create mode 100644 tests/scanner/number_underscore_separated_invalid5.test
+
+diff --git a/tests/Makefile.am b/tests/Makefile.am
+index 564f8fabf..fcc00eb1b 100644
+--- a/tests/Makefile.am
++++ b/tests/Makefile.am
+@@ -894,6 +894,7 @@ TESTS = \
+ 	scanner/number_underscore_separated_invalid.test \
+ 	scanner/number_underscore_separated_invalid2.test \
+ 	scanner/number_underscore_separated_invalid3.test \
 +	scanner/number_underscore_separated_invalid4.test \
  	scanner/preprocessor-invalid.test \
  	scanner/preprocessor-missing-paren.test \
@@ -145,50 +616,18 @@ index 000000000..3500e2504
 +}
 +
 diff --git a/tests/scanner/number_underscore_separated.vala b/tests/scanner/number_underscore_separated.vala
-new file mode 100644
-index 000000000..045c27f5f
---- /dev/null
+index ae6b6b46c..045c27f5f 100644
+--- a/tests/scanner/number_underscore_separated.vala
 +++ b/tests/scanner/number_underscore_separated.vala
-@@ -0,0 +1,6 @@
-+void main () {
+@@ -1,5 +1,6 @@
+ void main () {
+-	double foo = 3.141_592_653_589_793_2f;
+-	uint64 bar = 299_792_458ul;
 +	float foo = 3.141_592_653_589_793_2f;
 +	double baz = 6_022_140.76e-1_023;
 +	uint64 bar = 299_792_458ull;
-+	int64 minim = -0x80_00_00_01LL;
-+}
-diff --git a/tests/scanner/number_underscore_separated_invalid.test b/tests/scanner/number_underscore_separated_invalid.test
-new file mode 100644
-index 000000000..04c2018a3
---- /dev/null
-+++ b/tests/scanner/number_underscore_separated_invalid.test
-@@ -0,0 +1,5 @@
-+Invalid Code
-+
-+void main () {
-+	double foo = _3.141;
-+}
-diff --git a/tests/scanner/number_underscore_separated_invalid2.test b/tests/scanner/number_underscore_separated_invalid2.test
-new file mode 100644
-index 000000000..3265172e5
---- /dev/null
-+++ b/tests/scanner/number_underscore_separated_invalid2.test
-@@ -0,0 +1,5 @@
-+Invalid Code
-+
-+void main () {
-+	double foo = 3._141;
-+}
-diff --git a/tests/scanner/number_underscore_separated_invalid3.test b/tests/scanner/number_underscore_separated_invalid3.test
-new file mode 100644
-index 000000000..fde08221a
---- /dev/null
-+++ b/tests/scanner/number_underscore_separated_invalid3.test
-@@ -0,0 +1,5 @@
-+Invalid Code
-+
-+void main () {
-+	double foo = 3.14__1;
-+}
+ 	int64 minim = -0x80_00_00_01LL;
+ }
 diff --git a/tests/scanner/number_underscore_separated_invalid4.test b/tests/scanner/number_underscore_separated_invalid4.test
 new file mode 100644
 index 000000000..56d1887d5
@@ -211,320 +650,176 @@ index 000000000..8d3783b65
 +void main () {
 +	double foo = 3141e-3_;
 +}
-diff --git a/vala/valageniescanner.vala b/vala/valageniescanner.vala
-index ef54ae7d3..72e8398f1 100644
---- a/vala/valageniescanner.vala
-+++ b/vala/valageniescanner.vala
-@@ -974,8 +974,19 @@ public class Vala.Genie.Scanner {
- 				type = TokenType.IDENTIFIER;
- 			}
- 		} else if (current[0].isdigit ()) {
--			while (current < end && current[0].isdigit ()) {
--				current++;
-+			while (current < end) {
-+				if (current[0].isdigit ()) {
-+					current++;
-+				} else if (current[0] == '_') {
-+					// Support the underscore symbol separates digits in number values
-+					current++;
-+					if ((current >= end) || (!(current[0].isdigit ()))) {
-+						current--;
-+						break;
-+					}
-+				} else {
-+					break;
-+				}
- 			}
- 			type = TokenType.INTEGER_LITERAL;
- 			if (current < end && current[0].tolower () == 'l') {
-@@ -993,16 +1004,38 @@ public class Vala.Genie.Scanner {
- 				}
- 			} else if (current < end - 1 && current[0] == '.' && current[1].isdigit ()) {
- 				current++;
--				while (current < end && current[0].isdigit ()) {
--					current++;
-+				while (current < end) {
-+					if (current[0].isdigit ()) {
-+						current++;
-+					} else if (current[0] == '_') {
-+						// Support the underscore symbol separates digits in number values
-+						current++;
-+						if ((current >= end) || (!(current[0].isdigit ()))) {
-+							current--;
-+							break;
-+						}
-+					} else {
-+						break;
-+					}
- 				}
- 				if (current < end && current[0].tolower () == 'e') {
- 					current++;
- 					if (current < end && (current[0] == '+' || current[0] == '-')) {
- 						current++;
- 					}
--					while (current < end && current[0].isdigit ()) {
--						current++;
-+					while (current < end) {
-+						if (current[0].isdigit ()) {
-+							current++;
-+						} else if (current[0] == '_') {
-+							// Support the underscore symbol separates digits in number values
-+							current++;
-+							if ((current >= end) || (!(current[0].isdigit ()))) {
-+								current--;
-+								break;
-+							}
-+						} else {
-+							break;
-+						}
- 					}
- 				}
- 				if (current < end && current[0].tolower () == 'f') {
-@@ -1013,8 +1046,19 @@ public class Vala.Genie.Scanner {
- 					   && begin[0] == '0' && begin[1] == 'x' && begin[2].isxdigit ()) {
- 				// hexadecimal integer literal
- 				current++;
--				while (current < end && current[0].isxdigit ()) {
--					current++;
-+				while (current < end) {
-+					if (current[0].isxdigit ()) {
-+						current++;
-+					} else if (current[0] == '_') {
-+						// Support the underscore symbol separates digits in number values
-+						current++;
-+						if ((current >= end) || (!(current[0].isxdigit ()))) {
-+							current--;
-+							break;
-+						}
-+					} else {
-+						break;
-+					}
- 				}
- 			} else if (current < end && is_ident_char (current[0])) {
- 				// allow identifiers to start with a digit
-diff --git a/vala/valaintegerliteral.vala b/vala/valaintegerliteral.vala
-index e28960126..4fc8e890b 100644
---- a/vala/valaintegerliteral.vala
-+++ b/vala/valaintegerliteral.vala
-@@ -66,6 +66,10 @@ public class Vala.IntegerLiteral : Literal {
- 
- 		checked = true;
- 
-+		// Support the underscore symbol separates digits in number values
-+		string[] components = value.split ("_");
-+		value = string.joinv("", components);
-+
- 		int l = 0;
- 		while (value.has_suffix ("l") || value.has_suffix ("L")) {
- 			l++;
-diff --git a/vala/valarealliteral.vala b/vala/valarealliteral.vala
-index 2924cd764..308e5167d 100644
---- a/vala/valarealliteral.vala
-+++ b/vala/valarealliteral.vala
-@@ -64,6 +64,10 @@ public class Vala.RealLiteral : Literal {
- 
- 		checked = true;
- 
-+		// Support the underscore symbol separates digits in number values
-+		string[] components = value.split ("_");
-+		value = string.joinv("", components);
-+
- 		string type_name;
- 		if (value.has_suffix ("f") || value.has_suffix ("F")) {
- 			type_name ="float";
-diff --git a/vala/valascanner.vala b/vala/valascanner.vala
-index daeb97feb..faa25834c 100644
---- a/vala/valascanner.vala
-+++ b/vala/valascanner.vala
-@@ -606,13 +606,35 @@ public class Vala.Scanner {
- 		    && current[1] == 'x' && current[2].isxdigit ()) {
- 			// hexadecimal integer literal
- 			current += 2;
--			while (current < end && current[0].isxdigit ()) {
--				current++;
-+			while (current < end) {
-+				if (current[0].isxdigit ()) {
-+					current++;
-+				} else if (current[0] == '_') {
-+					// Support the underscore symbol separates digits in number values
-+					current++;
-+					if ((current >= end) || (!(current[0].isxdigit ()))) {
-+						current--;
-+						break;
-+					}
-+				} else {
-+					break;
-+				}
- 			}
- 		} else {
- 			// decimal number
--			while (current < end && current[0].isdigit ()) {
--				current++;
-+			while (current < end) {
-+				if (current[0].isdigit ()) {
-+					current++;
-+				} else if (current[0] == '_') {
-+					// Support the underscore symbol separates digits in number values
-+					current++;
-+					if ((current >= end) || (!(current[0].isdigit ()))) {
-+						current--;
-+						break;
-+					}
-+				} else {
-+					break;
-+				}
- 			}
- 		}
- 
-@@ -620,8 +642,19 @@ public class Vala.Scanner {
- 		if (current < end - 1 && current[0] == '.' && current[1].isdigit ()) {
- 			type = TokenType.REAL_LITERAL;
- 			current++;
--			while (current < end && current[0].isdigit ()) {
--				current++;
-+			while (current < end) {
-+				if (current[0].isdigit ()) {
-+					current++;
-+				} else if (current[0] == '_') {
-+					// Support the underscore symbol separates digits in number values
-+					current++;
-+					if ((current >= end) || (!(current[0].isdigit ()))) {
-+						current--;
-+						break;
-+					}
-+				} else {
-+					break;
-+				}
- 			}
- 		}
- 
-@@ -632,8 +665,19 @@ public class Vala.Scanner {
- 			if (current < end && (current[0] == '+' || current[0] == '-')) {
- 				current++;
- 			}
--			while (current < end && current[0].isdigit ()) {
--				current++;
-+			while (current < end) {
-+				if (current[0].isdigit ()) {
-+					current++;
-+				} else if (current[0] == '_') {
-+					// Support the underscore symbol separates digits in number values
-+					current++;
-+					if ((current >= end) || (!(current[0].isdigit ()))) {
-+						current--;
-+						break;
-+					}
-+				} else {
-+					break;
-+				}
- 			}
- 		}
- 
 -- 
 2.38.1.windows.1
 
 
-From 792a2b09a1986d745e56527745fc12135e1e40c3 Mon Sep 17 00:00:00 2001
+From 1637cbc046571542fe214b95e08452431d208b9d Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
-Date: Tue, 25 Oct 2022 23:05:36 +0800
-Subject: [PATCH 2/2] Squashed commit of the following:
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Date: Wed, 26 Oct 2022 09:29:08 +0800
+Subject: [PATCH 7/8] simplify the implementation
 
-commit 357bce0485b059626f53d849284c1a8702709da2
-Author: 星外之神 <wszqkzqk@qq.com>
-Date:   Tue Oct 25 22:38:06 2022 +0800
-
-    scanner: fail when exponent has no digit(modified)
-
-commit c92ea3ee54b3b8cdb62f855a83228784c635d757
-Author: 星外之神 <wszqkzqk@qq.com>
-Date:   Tue Oct 25 21:02:55 2022 +0800
-
-    tests: Add tests for exponent has nodigits
-
-commit 67f2d7da40f81d73cf7e87c24227f227f84acd82
-Author: 星外之神 <wszqkzqk@qq.com>
-Date:   Tue Oct 25 21:02:32 2022 +0800
-
-    scanner: fail when exponent has nodigits
 ---
- .../number_exponent_has_no_digits.test        |  5 +++++
- .../number_exponent_has_no_digits2.test       |  5 +++++
- .../number_exponent_has_no_digits3.test       |  5 +++++
- vala/valascanner.vala                         | 20 +++++++++++++++----
- 4 files changed, 31 insertions(+), 4 deletions(-)
- create mode 100644 tests/scanner/number_exponent_has_no_digits.test
- create mode 100644 tests/scanner/number_exponent_has_no_digits2.test
- create mode 100644 tests/scanner/number_exponent_has_no_digits3.test
+ vala/valageniescanner.vala | 24 ++++--------------------
+ vala/valascanner.vala      | 24 ++++--------------------
+ 2 files changed, 8 insertions(+), 40 deletions(-)
 
-diff --git a/tests/scanner/number_exponent_has_no_digits.test b/tests/scanner/number_exponent_has_no_digits.test
-new file mode 100644
-index 000000000..fbe418a07
---- /dev/null
-+++ b/tests/scanner/number_exponent_has_no_digits.test
-@@ -0,0 +1,5 @@
-+Invalid Code
-+
-+void main () {
-+	double foo = 18.93e;
-+}
-diff --git a/tests/scanner/number_exponent_has_no_digits2.test b/tests/scanner/number_exponent_has_no_digits2.test
-new file mode 100644
-index 000000000..b0d48fa09
---- /dev/null
-+++ b/tests/scanner/number_exponent_has_no_digits2.test
-@@ -0,0 +1,5 @@
-+Invalid Code
-+
-+void main () {
-+	double foo = 20.03e+;
-+}
-diff --git a/tests/scanner/number_exponent_has_no_digits3.test b/tests/scanner/number_exponent_has_no_digits3.test
-new file mode 100644
-index 000000000..0256423ef
---- /dev/null
-+++ b/tests/scanner/number_exponent_has_no_digits3.test
-@@ -0,0 +1,5 @@
-+Invalid Code
-+
-+void main () {
-+	double foo = 7.11e-;
-+}
-diff --git a/vala/valascanner.vala b/vala/valascanner.vala
-index faa25834c..30d476997 100644
---- a/vala/valascanner.vala
-+++ b/vala/valascanner.vala
-@@ -659,12 +659,24 @@ public class Vala.Scanner {
- 		}
- 
- 		// exponent part
--		if (current < end && current[0].tolower () == 'e') {
--			type = TokenType.REAL_LITERAL;
-+		if ((current < end - 1) && (current[0].tolower () == 'e')) {
- 			current++;
--			if (current < end && (current[0] == '+' || current[0] == '-')) {
--				current++;
-+			if (current[0] == '+' || current[0] == '-') {
-+				if (current < end - 1) {
-+					current++;
-+				} else {
-+					// There is no digits after 'e', revert
-+					current--;
-+				}
-+			} else if (!(current[0].isdigit ())) {
-+				// There is no digits after 'e', revert
-+				current--;
- 			}
-+
-+			if (current[0].isdigit ()) {
-+				type = TokenType.REAL_LITERAL;
-+			}
-+
+diff --git a/vala/valageniescanner.vala b/vala/valageniescanner.vala
+index 72e8398f1..30803c1f5 100644
+--- a/vala/valageniescanner.vala
++++ b/vala/valageniescanner.vala
+@@ -977,13 +977,9 @@ public class Vala.Genie.Scanner {
  			while (current < end) {
  				if (current[0].isdigit ()) {
  					current++;
+-				} else if (current[0] == '_') {
++				} else if (current[0] == '_' && current < end -1 && current[1].isdigit ()) {
+ 					// Support the underscore symbol separates digits in number values
+ 					current++;
+-					if ((current >= end) || (!(current[0].isdigit ()))) {
+-						current--;
+-						break;
+-					}
+ 				} else {
+ 					break;
+ 				}
+@@ -1007,13 +1003,9 @@ public class Vala.Genie.Scanner {
+ 				while (current < end) {
+ 					if (current[0].isdigit ()) {
+ 						current++;
+-					} else if (current[0] == '_') {
++					} else if (current[0] == '_' && current < end -1 && current[1].isdigit ()) {
+ 						// Support the underscore symbol separates digits in number values
+ 						current++;
+-						if ((current >= end) || (!(current[0].isdigit ()))) {
+-							current--;
+-							break;
+-						}
+ 					} else {
+ 						break;
+ 					}
+@@ -1026,13 +1018,9 @@ public class Vala.Genie.Scanner {
+ 					while (current < end) {
+ 						if (current[0].isdigit ()) {
+ 							current++;
+-						} else if (current[0] == '_') {
++						} else if (current[0] == '_' && current < end -1 && current[1].isdigit ()) {
+ 							// Support the underscore symbol separates digits in number values
+ 							current++;
+-							if ((current >= end) || (!(current[0].isdigit ()))) {
+-								current--;
+-								break;
+-							}
+ 						} else {
+ 							break;
+ 						}
+@@ -1049,13 +1037,9 @@ public class Vala.Genie.Scanner {
+ 				while (current < end) {
+ 					if (current[0].isxdigit ()) {
+ 						current++;
+-					} else if (current[0] == '_') {
++					} else if (current[0] == '_' && current < end -1 && current[1].isxdigit ()) {
+ 						// Support the underscore symbol separates digits in number values
+ 						current++;
+-						if ((current >= end) || (!(current[0].isxdigit ()))) {
+-							current--;
+-							break;
+-						}
+ 					} else {
+ 						break;
+ 					}
+diff --git a/vala/valascanner.vala b/vala/valascanner.vala
+index faa25834c..0a2a4a0b2 100644
+--- a/vala/valascanner.vala
++++ b/vala/valascanner.vala
+@@ -609,13 +609,9 @@ public class Vala.Scanner {
+ 			while (current < end) {
+ 				if (current[0].isxdigit ()) {
+ 					current++;
+-				} else if (current[0] == '_') {
++				} else if (current[0] == '_' && current < end -1 && current[1].isxdigit ()) {
+ 					// Support the underscore symbol separates digits in number values
+ 					current++;
+-					if ((current >= end) || (!(current[0].isxdigit ()))) {
+-						current--;
+-						break;
+-					}
+ 				} else {
+ 					break;
+ 				}
+@@ -625,13 +621,9 @@ public class Vala.Scanner {
+ 			while (current < end) {
+ 				if (current[0].isdigit ()) {
+ 					current++;
+-				} else if (current[0] == '_') {
++				} else if (current[0] == '_' && current < end -1 && current[1].isdigit ()) {
+ 					// Support the underscore symbol separates digits in number values
+ 					current++;
+-					if ((current >= end) || (!(current[0].isdigit ()))) {
+-						current--;
+-						break;
+-					}
+ 				} else {
+ 					break;
+ 				}
+@@ -645,13 +637,9 @@ public class Vala.Scanner {
+ 			while (current < end) {
+ 				if (current[0].isdigit ()) {
+ 					current++;
+-				} else if (current[0] == '_') {
++				} else if (current[0] == '_' && current < end -1 && current[1].isdigit ()) {
+ 					// Support the underscore symbol separates digits in number values
+ 					current++;
+-					if ((current >= end) || (!(current[0].isdigit ()))) {
+-						current--;
+-						break;
+-					}
+ 				} else {
+ 					break;
+ 				}
+@@ -668,13 +656,9 @@ public class Vala.Scanner {
+ 			while (current < end) {
+ 				if (current[0].isdigit ()) {
+ 					current++;
+-				} else if (current[0] == '_') {
++				} else if (current[0] == '_' && current < end -1 && current[1].isdigit ()) {
+ 					// Support the underscore symbol separates digits in number values
+ 					current++;
+-					if ((current >= end) || (!(current[0].isdigit ()))) {
+-						current--;
+-						break;
+-					}
+ 				} else {
+ 					break;
+ 				}
+-- 
+2.38.1.windows.1
+
+
+From ad4a49a75f45f5424ace16ad8758043873da1eaa Mon Sep 17 00:00:00 2001
+From: wszqkzqk <wszqkzqk@qq.com>
+Date: Fri, 28 Oct 2022 11:24:08 +0800
+Subject: [PATCH 8/8] fix ambiguous variable names
+
+---
+ vapi/v4l2.vapi | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/vapi/v4l2.vapi b/vapi/v4l2.vapi
+index 129f52a14..4c4b90ca8 100644
+--- a/vapi/v4l2.vapi
++++ b/vapi/v4l2.vapi
+@@ -559,8 +559,8 @@ namespace V4l2
+ 		NTSC,
+ 		SECAM_DK,
+ 		SECAM,
+-		525_60,
+-		625_50,
++		@525_60,
++		@625_50,
+ 		ATSC,
+ 		UNKNOWN,
+ 		ALL
 -- 
 2.38.1.windows.1
 
