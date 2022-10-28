@@ -1,14 +1,47 @@
-From c41dd2be3ce241c7c8fe47a506eb1edd8891394e Mon Sep 17 00:00:00 2001
+From ae158f901594fcf194a50b476a599324b3ee4528 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
-Date: Fri, 28 Oct 2022 20:55:04 +0800
+Date: Fri, 28 Oct 2022 22:49:57 +0800
 Subject: [PATCH] add support for verbatim template string
 
 ---
- vala/valascanner.vala | 45 +++++++++++++++++++++++++++++++++----------
- 1 file changed, 35 insertions(+), 10 deletions(-)
+ vala/valaparser.vala    |  6 +++++
+ vala/valascanner.vala   | 49 +++++++++++++++++++++++++++++++----------
+ vala/valatokentype.vala |  2 ++
+ 3 files changed, 45 insertions(+), 12 deletions(-)
 
+diff --git a/vala/valaparser.vala b/vala/valaparser.vala
+index f703e9c86..b991efd23 100644
+--- a/vala/valaparser.vala
++++ b/vala/valaparser.vala
+@@ -384,6 +384,10 @@ public class Vala.Parser : CodeVisitor {
+ 			string raw_string = get_last_string ();
+ 			string escaped_string = raw_string.substring (3, raw_string.length - 6).escape ("");
+ 			return new StringLiteral ("\"%s\"".printf (escaped_string), get_src (begin));
++		case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
++			string raw_string = get_last_string ();
++			string escaped_string = raw_string.escape ("");
++			return new StringLiteral ("\"%s\"".printf (escaped_string), get_src (begin));
+ 		case TokenType.NULL:
+ 			next ();
+ 			return new NullLiteral (get_src (begin));
+@@ -719,6 +723,7 @@ public class Vala.Parser : CodeVisitor {
+ 		case TokenType.REGEX_LITERAL:
+ 		case TokenType.TEMPLATE_STRING_LITERAL:
+ 		case TokenType.VERBATIM_STRING_LITERAL:
++		case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
+ 		case TokenType.NULL:
+ 			expr = parse_literal ();
+ 			break;
+@@ -1269,6 +1274,7 @@ public class Vala.Parser : CodeVisitor {
+ 						case TokenType.STRING_LITERAL:
+ 						case TokenType.TEMPLATE_STRING_LITERAL:
+ 						case TokenType.VERBATIM_STRING_LITERAL:
++						case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
+ 						case TokenType.REGEX_LITERAL:
+ 						case TokenType.NULL:
+ 						case TokenType.THIS:
 diff --git a/vala/valascanner.vala b/vala/valascanner.vala
-index daeb97feb..d47db4c29 100644
+index daeb97feb..3fdd55a4d 100644
 --- a/vala/valascanner.vala
 +++ b/vala/valascanner.vala
 @@ -54,7 +54,8 @@ public class Vala.Scanner {
@@ -54,7 +87,7 @@ index daeb97feb..d47db4c29 100644
 +						current += 3;
 +						state_stack.length--;
 +					} else {
-+						type = TokenType.TEMPLATE_STRING_LITERAL;
++						type = TokenType.VERBATIM_TEMPLATE_STRING_LITERAL;
 +						current++;
 +						token_length_in_chars++;
 +					}
@@ -66,7 +99,13 @@ index daeb97feb..d47db4c29 100644
  				break;
  			case '$':
  				token_begin.pos++; // $ is not part of following token
-@@ -723,14 +740,14 @@ public class Vala.Scanner {
+@@ -718,19 +735,19 @@ public class Vala.Scanner {
+ 					state_stack += State.PARENS;
+ 					return read_token (out token_begin, out token_end);
+ 				} else if (current[0] == '$') {
+-					type = TokenType.TEMPLATE_STRING_LITERAL;
++					type = (is_verbatim) ? TokenType.VERBATIM_TEMPLATE_STRING_LITERAL : TokenType.TEMPLATE_STRING_LITERAL;
+ 					current++;
  					state_stack += State.TEMPLATE_PART;
  				} else {
  					Report.error (get_source_reference (1), "unexpected character");
@@ -75,7 +114,8 @@ index daeb97feb..d47db4c29 100644
  				}
  				break;
  			default:
- 				type = TokenType.TEMPLATE_STRING_LITERAL;
+-				type = TokenType.TEMPLATE_STRING_LITERAL;
++				type = (is_verbatim) ? TokenType.VERBATIM_TEMPLATE_STRING_LITERAL : TokenType.TEMPLATE_STRING_LITERAL;
  				token_length_in_chars = 0;
  				while (current < end && current[0] != '"' && current[0] != '$') {
 -					if (current[0] == '\\') {
@@ -112,6 +152,26 @@ index daeb97feb..d47db4c29 100644
  			} else {
  				token_begin.pos++; // @ is not part of the identifier
  				current++;
+diff --git a/vala/valatokentype.vala b/vala/valatokentype.vala
+index 2c64ec1b0..6097beaff 100644
+--- a/vala/valatokentype.vala
++++ b/vala/valatokentype.vala
+@@ -149,6 +149,7 @@ public enum Vala.TokenType {
+ 	USING,
+ 	VAR,
+ 	VERBATIM_STRING_LITERAL,
++	VERBATIM_TEMPLATE_STRING_LITERAL,
+ 	VIRTUAL,
+ 	VOID,
+ 	VOLATILE,
+@@ -284,6 +285,7 @@ public enum Vala.TokenType {
+ 		case USING: return "`using'";
+ 		case VAR: return "`var'";
+ 		case VERBATIM_STRING_LITERAL: return "verbatim string literal";
++		case VERBATIM_TEMPLATE_STRING_LITERAL: return "verbatim template string literal";
+ 		case VIRTUAL: return "`virtual'";
+ 		case VOID: return "`void'";
+ 		case VOLATILE: return "`volatile'";
 -- 
 2.38.1.windows.1
 

@@ -4,7 +4,7 @@ _realname=vala
 pkgbase=mingw-w64-${_realname}
 pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
 pkgver=0.56.3
-pkgrel=2
+pkgrel=1
 pkgdesc="Compiler for the GObject type system (mingw-w64)"
 arch=('any')
 mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clang32' 'clangarm64')
@@ -25,7 +25,8 @@ source=(https://download.gnome.org/sources/${_realname}/${pkgver%.*}/${_realname
         )
 sha256sums=('e1066221bf7b89cb1fa7327a3888645cb33b604de3bf45aa81132fd040b699bf'
             '266756afe0fa2871800e2d4cbf5db5c9e9e68abd52f7f694f077c7e425bc2772'
-            '972a54741df24769f4d375920329265b2742ee96aa96a8acd09c5009db631918')
+            '972a54741df24769f4d375920329265b2742ee96aa96a8acd09c5009db631918'
+            'e1857d30b595fa895662d291a4c574f2b524f0cbc4166ee0ebdee35a57d61113')
 
 prepare() {
   cd "${srcdir}"/${_realname}-${pkgver}
