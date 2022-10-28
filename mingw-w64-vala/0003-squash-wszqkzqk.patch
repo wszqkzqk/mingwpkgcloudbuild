@@ -1,14 +1,14 @@
-From d5ca938f0c57417d79253de279cf7fd14aa43250 Mon Sep 17 00:00:00 2001
+From dc57f473a9aee4423b24c50fd6dc4c43f47e1027 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
-Date: Fri, 28 Oct 2022 14:30:34 +0800
-Subject: [PATCH] add support for verbatim template strings
+Date: Fri, 28 Oct 2022 20:26:15 +0800
+Subject: [PATCH] add support for verbatim template string
 
 ---
- vala/valascanner.vala | 42 +++++++++++++++++++++++++++++++++---------
- 1 file changed, 33 insertions(+), 9 deletions(-)
+ vala/valascanner.vala | 44 +++++++++++++++++++++++++++++++++----------
+ 1 file changed, 34 insertions(+), 10 deletions(-)
 
 diff --git a/vala/valascanner.vala b/vala/valascanner.vala
-index daeb97feb..f336efceb 100644
+index daeb97feb..b7b743e7d 100644
 --- a/vala/valascanner.vala
 +++ b/vala/valascanner.vala
 @@ -54,7 +54,8 @@ public class Vala.Scanner {
@@ -65,7 +65,15 @@ index daeb97feb..f336efceb 100644
  				break;
  			case '$':
  				token_begin.pos++; // $ is not part of following token
-@@ -730,7 +746,7 @@ public class Vala.Scanner {
+@@ -723,14 +739,14 @@ public class Vala.Scanner {
+ 					state_stack += State.TEMPLATE_PART;
+ 				} else {
+ 					Report.error (get_source_reference (1), "unexpected character");
+-					return read_template_token (out token_begin, out token_end);
++					return read_template_token (out token_begin, out token_end, is_verbatim);
+ 				}
+ 				break;
+ 			default:
  				type = TokenType.TEMPLATE_STRING_LITERAL;
  				token_length_in_chars = 0;
  				while (current < end && current[0] != '"' && current[0] != '$') {
