@@ -1,7 +1,7 @@
 From b2abdfdb5acc746aecc9f5aa8838b192ec41b7f7 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Fri, 28 Oct 2022 23:47:56 +0800
-Subject: [PATCH 1/4] add support for verbatim template string
+Subject: [PATCH 1/7] add support for verbatim template string
 
 ---
  vala/valaparser.vala    |  7 ++++++
@@ -180,7 +180,7 @@ index 2c64ec1b0..6097beaff 100644
 From 7b79335175fbde85d1f3b3482d1a459038e50a1f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 29 Oct 2022 00:34:35 +0800
-Subject: [PATCH 2/4] add test for verbatim template
+Subject: [PATCH 2/7] add test for verbatim template
 
 ---
  tests/Makefile.am                           | 1 +
@@ -219,7 +219,7 @@ index 000000000..f0981c067
 From e742c9efd8b1a7e377c0b0368a7d0adfd70d32c0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 29 Oct 2022 01:42:06 +0800
-Subject: [PATCH 3/4] support string ends with '"'
+Subject: [PATCH 3/7] support string ends with '"'
 
 ---
  vala/valascanner.vala | 2 +-
@@ -245,7 +245,7 @@ index 3fdd55a4d..0291cac30 100644
 From 083b3cb117370a6df5e8d6e21d69752a196633e6 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 29 Oct 2022 09:52:30 +0800
-Subject: [PATCH 4/4] genie: add support for verbatim template string
+Subject: [PATCH 4/7] genie: add support for verbatim template string
 
 ---
  vala/valagenieparser.vala    | 7 +++++++
@@ -304,6 +304,93 @@ index 08bef53fd..fc46724b4 100644
  		case VIRTUAL: return "`virtual'";
  		case VOID: return "`void'";
  		case VOLATILE: return "`volatile'";
+-- 
+2.38.1.windows.1
+
+
+From ccb39e169fffa1ff1fd1981e8920ccde33c49984 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
+Date: Sat, 29 Oct 2022 23:19:05 +0800
+Subject: [PATCH 5/7] Revert "support string ends with '"'"
+
+This reverts commit e742c9efd8b1a7e377c0b0368a7d0adfd70d32c0.
+---
+ vala/valascanner.vala | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/vala/valascanner.vala b/vala/valascanner.vala
+index 0291cac30..3fdd55a4d 100644
+--- a/vala/valascanner.vala
++++ b/vala/valascanner.vala
+@@ -703,7 +703,7 @@ public class Vala.Scanner {
+ 			switch (current[0]) {
+ 			case '"':
+ 				if (is_verbatim) {
+-					if (current == end - 3 && current[1] == '"' && current[2] == '"') {
++					if (current < end -2 && current[1] == '"' && current[2] == '"') {
+ 						type = TokenType.CLOSE_TEMPLATE;
+ 						current += 3;
+ 						state_stack.length--;
+-- 
+2.38.1.windows.1
+
+
+From 38db385897de93e32a96c6130cc9f08eae2902ef Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
+Date: Sat, 29 Oct 2022 23:40:59 +0800
+Subject: [PATCH 6/7] support strings endwith '"' (fixed)
+
+---
+ vala/valascanner.vala | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/vala/valascanner.vala b/vala/valascanner.vala
+index 3fdd55a4d..60fa7958e 100644
+--- a/vala/valascanner.vala
++++ b/vala/valascanner.vala
+@@ -703,7 +703,7 @@ public class Vala.Scanner {
+ 			switch (current[0]) {
+ 			case '"':
+ 				if (is_verbatim) {
+-					if (current < end -2 && current[1] == '"' && current[2] == '"') {
++					if (current < end -2 && current[1] == '"' && current[2] == '"' && current[3] != '"') {
+ 						type = TokenType.CLOSE_TEMPLATE;
+ 						current += 3;
+ 						state_stack.length--;
+@@ -711,6 +711,7 @@ public class Vala.Scanner {
+ 						type = TokenType.VERBATIM_TEMPLATE_STRING_LITERAL;
+ 						current++;
+ 						token_length_in_chars++;
++						state_stack += State.TEMPLATE_PART;
+ 					}
+ 				} else {
+ 					type = TokenType.CLOSE_TEMPLATE;
+-- 
+2.38.1.windows.1
+
+
+From 8fead43be3b748ee66d04a88c5aa3b6b51d9c8d0 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
+Date: Sat, 29 Oct 2022 23:56:03 +0800
+Subject: [PATCH 7/7] add more tests
+
+---
+ tests/scanner/string-verbatim-template.vala | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/tests/scanner/string-verbatim-template.vala b/tests/scanner/string-verbatim-template.vala
+index f0981c067..c615de9c6 100644
+--- a/tests/scanner/string-verbatim-template.vala
++++ b/tests/scanner/string-verbatim-template.vala
+@@ -3,4 +3,8 @@ void main () {
+     var s1 = @"""a is $a, '\' is '\'""";
+     var s2 = @"a is $a, '\\' is '\\'";
+     assert(s1 == s2);
++
++    var s3 = @""""Hello, World! "a" == $a"""";
++    var s4 = @"\"Hello, World! \"a\" == $a\"";
++    assert(s3 == s4);
+ }
 -- 
 2.38.1.windows.1
 
