@@ -1,30 +1,31 @@
-From ae158f901594fcf194a50b476a599324b3ee4528 Mon Sep 17 00:00:00 2001
+From b2abdfdb5acc746aecc9f5aa8838b192ec41b7f7 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
-Date: Fri, 28 Oct 2022 22:49:57 +0800
-Subject: [PATCH] add support for verbatim template string
+Date: Fri, 28 Oct 2022 23:47:56 +0800
+Subject: [PATCH 1/4] add support for verbatim template string
 
 ---
- vala/valaparser.vala    |  6 +++++
+ vala/valaparser.vala    |  7 ++++++
  vala/valascanner.vala   | 49 +++++++++++++++++++++++++++++++----------
  vala/valatokentype.vala |  2 ++
- 3 files changed, 45 insertions(+), 12 deletions(-)
+ 3 files changed, 46 insertions(+), 12 deletions(-)
 
 diff --git a/vala/valaparser.vala b/vala/valaparser.vala
-index f703e9c86..b991efd23 100644
+index f703e9c86..23b1e7db4 100644
 --- a/vala/valaparser.vala
 +++ b/vala/valaparser.vala
-@@ -384,6 +384,10 @@ public class Vala.Parser : CodeVisitor {
+@@ -384,6 +384,11 @@ public class Vala.Parser : CodeVisitor {
  			string raw_string = get_last_string ();
  			string escaped_string = raw_string.substring (3, raw_string.length - 6).escape ("");
  			return new StringLiteral ("\"%s\"".printf (escaped_string), get_src (begin));
 +		case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
++			next ();
 +			string raw_string = get_last_string ();
 +			string escaped_string = raw_string.escape ("");
 +			return new StringLiteral ("\"%s\"".printf (escaped_string), get_src (begin));
  		case TokenType.NULL:
  			next ();
  			return new NullLiteral (get_src (begin));
-@@ -719,6 +723,7 @@ public class Vala.Parser : CodeVisitor {
+@@ -719,6 +724,7 @@ public class Vala.Parser : CodeVisitor {
  		case TokenType.REGEX_LITERAL:
  		case TokenType.TEMPLATE_STRING_LITERAL:
  		case TokenType.VERBATIM_STRING_LITERAL:
@@ -32,7 +33,7 @@ index f703e9c86..b991efd23 100644
  		case TokenType.NULL:
  			expr = parse_literal ();
  			break;
-@@ -1269,6 +1274,7 @@ public class Vala.Parser : CodeVisitor {
+@@ -1269,6 +1275,7 @@ public class Vala.Parser : CodeVisitor {
  						case TokenType.STRING_LITERAL:
  						case TokenType.TEMPLATE_STRING_LITERAL:
  						case TokenType.VERBATIM_STRING_LITERAL:
@@ -166,6 +167,137 @@ index 2c64ec1b0..6097beaff 100644
  	VOLATILE,
 @@ -284,6 +285,7 @@ public enum Vala.TokenType {
  		case USING: return "`using'";
+ 		case VAR: return "`var'";
+ 		case VERBATIM_STRING_LITERAL: return "verbatim string literal";
++		case VERBATIM_TEMPLATE_STRING_LITERAL: return "verbatim template string literal";
+ 		case VIRTUAL: return "`virtual'";
+ 		case VOID: return "`void'";
+ 		case VOLATILE: return "`volatile'";
+-- 
+2.38.1.windows.1
+
+
+From 7b79335175fbde85d1f3b3482d1a459038e50a1f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
+Date: Sat, 29 Oct 2022 00:34:35 +0800
+Subject: [PATCH 2/4] add test for verbatim template
+
+---
+ tests/Makefile.am                           | 1 +
+ tests/scanner/string-verbatim-template.vala | 6 ++++++
+ 2 files changed, 7 insertions(+)
+ create mode 100644 tests/scanner/string-verbatim-template.vala
+
+diff --git a/tests/Makefile.am b/tests/Makefile.am
+index 10ff6183f..a2cd53a57 100644
+--- a/tests/Makefile.am
++++ b/tests/Makefile.am
+@@ -908,6 +908,7 @@ TESTS = \
+ 	scanner/string-escape-x-digit-length.test \
+ 	scanner/string-escape-x-empty.test \
+ 	scanner/string-escape-x.vala \
++	scanner/string-verbatim-template.vala \
+ 	parser/argument-list-incomplete.test \
+ 	parser/array-creation-invalid.test \
+ 	parser/array-length.vala \
+diff --git a/tests/scanner/string-verbatim-template.vala b/tests/scanner/string-verbatim-template.vala
+new file mode 100644
+index 000000000..f0981c067
+--- /dev/null
++++ b/tests/scanner/string-verbatim-template.vala
+@@ -0,0 +1,6 @@
++void main () {
++    int a = 1;
++    var s1 = @"""a is $a, '\' is '\'""";
++    var s2 = @"a is $a, '\\' is '\\'";
++    assert(s1 == s2);
++}
+-- 
+2.38.1.windows.1
+
+
+From e742c9efd8b1a7e377c0b0368a7d0adfd70d32c0 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
+Date: Sat, 29 Oct 2022 01:42:06 +0800
+Subject: [PATCH 3/4] support string ends with '"'
+
+---
+ vala/valascanner.vala | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/vala/valascanner.vala b/vala/valascanner.vala
+index 3fdd55a4d..0291cac30 100644
+--- a/vala/valascanner.vala
++++ b/vala/valascanner.vala
+@@ -703,7 +703,7 @@ public class Vala.Scanner {
+ 			switch (current[0]) {
+ 			case '"':
+ 				if (is_verbatim) {
+-					if (current < end -2 && current[1] == '"' && current[2] == '"') {
++					if (current == end - 3 && current[1] == '"' && current[2] == '"') {
+ 						type = TokenType.CLOSE_TEMPLATE;
+ 						current += 3;
+ 						state_stack.length--;
+-- 
+2.38.1.windows.1
+
+
+From 083b3cb117370a6df5e8d6e21d69752a196633e6 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
+Date: Sat, 29 Oct 2022 09:52:30 +0800
+Subject: [PATCH 4/4] genie: add support for verbatim template string
+
+---
+ vala/valagenieparser.vala    | 7 +++++++
+ vala/valagenietokentype.vala | 2 ++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/vala/valagenieparser.vala b/vala/valagenieparser.vala
+index 7c7c48309..9781cd339 100644
+--- a/vala/valagenieparser.vala
++++ b/vala/valagenieparser.vala
+@@ -394,6 +394,11 @@ public class Vala.Genie.Parser : CodeVisitor {
+ 			string raw_string = get_last_string ();
+ 			string escaped_string = raw_string.substring (3, raw_string.length - 6).escape ("");
+ 			return new StringLiteral ("\"%s\"".printf (escaped_string), get_src (begin));
++		case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
++			next ();
++			string raw_string = get_last_string ();
++			string escaped_string = raw_string.escape ("");
++			return new StringLiteral ("\"%s\"".printf (escaped_string), get_src (begin));
+ 		case TokenType.NULL:
+ 			next ();
+ 			return new NullLiteral (get_src (begin));
+@@ -701,6 +706,7 @@ public class Vala.Genie.Parser : CodeVisitor {
+ 		case TokenType.STRING_LITERAL:
+ 		case TokenType.TEMPLATE_STRING_LITERAL:
+ 		case TokenType.VERBATIM_STRING_LITERAL:
++		case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
+ 		case TokenType.NULL:
+ 			expr = parse_literal ();
+ 			break;
+@@ -1285,6 +1291,7 @@ public class Vala.Genie.Parser : CodeVisitor {
+ 					case TokenType.STRING_LITERAL:
+ 					case TokenType.TEMPLATE_STRING_LITERAL:
+ 					case TokenType.VERBATIM_STRING_LITERAL:
++					case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
+ 					case TokenType.NULL:
+ 					case TokenType.SELF:
+ 					case TokenType.SUPER:
+diff --git a/vala/valagenietokentype.vala b/vala/valagenietokentype.vala
+index 08bef53fd..fc46724b4 100644
+--- a/vala/valagenietokentype.vala
++++ b/vala/valagenietokentype.vala
+@@ -163,6 +163,7 @@ public enum Vala.Genie.TokenType {
+ 	USES,
+ 	VAR,
+ 	VERBATIM_STRING_LITERAL,
++	VERBATIM_TEMPLATE_STRING_LITERAL,
+ 	VIRTUAL,
+ 	VOID,
+ 	VOLATILE,
+@@ -311,6 +312,7 @@ public enum Vala.Genie.TokenType {
+ 		case USES: return "`uses'";
  		case VAR: return "`var'";
  		case VERBATIM_STRING_LITERAL: return "verbatim string literal";
 +		case VERBATIM_TEMPLATE_STRING_LITERAL: return "verbatim template string literal";
