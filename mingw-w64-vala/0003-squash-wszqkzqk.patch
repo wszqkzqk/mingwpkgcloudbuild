@@ -1,7 +1,7 @@
 From b2abdfdb5acc746aecc9f5aa8838b192ec41b7f7 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Fri, 28 Oct 2022 23:47:56 +0800
-Subject: [PATCH 01/14] add support for verbatim template string
+Subject: [PATCH 01/15] add support for verbatim template string
 
 ---
  vala/valaparser.vala    |  7 ++++++
@@ -180,7 +180,7 @@ index 2c64ec1b0..6097beaff 100644
 From 7b79335175fbde85d1f3b3482d1a459038e50a1f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 29 Oct 2022 00:34:35 +0800
-Subject: [PATCH 02/14] add test for verbatim template
+Subject: [PATCH 02/15] add test for verbatim template
 
 ---
  tests/Makefile.am                           | 1 +
@@ -219,7 +219,7 @@ index 000000000..f0981c067
 From e742c9efd8b1a7e377c0b0368a7d0adfd70d32c0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 29 Oct 2022 01:42:06 +0800
-Subject: [PATCH 03/14] support string ends with '"'
+Subject: [PATCH 03/15] support string ends with '"'
 
 ---
  vala/valascanner.vala | 2 +-
@@ -245,7 +245,7 @@ index 3fdd55a4d..0291cac30 100644
 From 083b3cb117370a6df5e8d6e21d69752a196633e6 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 29 Oct 2022 09:52:30 +0800
-Subject: [PATCH 04/14] genie: add support for verbatim template string
+Subject: [PATCH 04/15] genie: add support for verbatim template string
 
 ---
  vala/valagenieparser.vala    | 7 +++++++
@@ -311,7 +311,7 @@ index 08bef53fd..fc46724b4 100644
 From ccb39e169fffa1ff1fd1981e8920ccde33c49984 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 29 Oct 2022 23:19:05 +0800
-Subject: [PATCH 05/14] Revert "support string ends with '"'"
+Subject: [PATCH 05/15] Revert "support string ends with '"'"
 
 This reverts commit e742c9efd8b1a7e377c0b0368a7d0adfd70d32c0.
 ---
@@ -338,7 +338,7 @@ index 0291cac30..3fdd55a4d 100644
 From 38db385897de93e32a96c6130cc9f08eae2902ef Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 29 Oct 2022 23:40:59 +0800
-Subject: [PATCH 06/14] support strings endwith '"' (fixed)
+Subject: [PATCH 06/15] support strings endwith '"' (fixed)
 
 ---
  vala/valascanner.vala | 3 ++-
@@ -372,7 +372,7 @@ index 3fdd55a4d..60fa7958e 100644
 From 8fead43be3b748ee66d04a88c5aa3b6b51d9c8d0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 29 Oct 2022 23:56:03 +0800
-Subject: [PATCH 07/14] add more tests
+Subject: [PATCH 07/15] add more tests
 
 ---
  tests/scanner/string-verbatim-template.vala | 4 ++++
@@ -398,7 +398,7 @@ index f0981c067..c615de9c6 100644
 From 343013c0ca77b9ba0413d9d6c3b0d80a05cd0d96 Mon Sep 17 00:00:00 2001
 From: wszqkzqk <wszqkzqk@qq.com>
 Date: Sun, 30 Oct 2022 10:33:42 +0800
-Subject: [PATCH 08/14] fix the support of `@""`
+Subject: [PATCH 08/15] fix the support of `@""`
 
 ---
  vala/valascanner.vala | 2 +-
@@ -424,7 +424,7 @@ index 60fa7958e..c545115dc 100644
 From 86c1f6f8b8fb073923e3559a74b8c134b2d3ac8e Mon Sep 17 00:00:00 2001
 From: Rico Tzschichholz <ricotz@ubuntu.com>
 Date: Sun, 30 Oct 2022 10:19:22 +0100
-Subject: [PATCH 09/14] extend tests
+Subject: [PATCH 09/15] extend tests
 
 ---
  tests/Makefile.am                             |  2 +
@@ -709,7 +709,7 @@ index c615de9c6..32ff85755 100644
 From d746f44de31e01276e919dde197920ccb2bf4847 Mon Sep 17 00:00:00 2001
 From: Rico Tzschichholz <ricotz@ubuntu.com>
 Date: Sun, 30 Oct 2022 10:31:55 +0100
-Subject: [PATCH 10/14] fix typo
+Subject: [PATCH 10/15] fix typo
 
 ---
  tests/parser/verbatim-template.vala | 2 +-
@@ -734,7 +734,7 @@ index da64b642d..400418025 100644
 From c0746fbac51f7d437c7a9ada1ebadbdcf5d590b5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sun, 30 Oct 2022 18:08:21 +0800
-Subject: [PATCH 11/14] fix comma
+Subject: [PATCH 11/15] fix comma
 
 ---
  vala/valascanner.vala | 2 +-
@@ -760,7 +760,7 @@ index c545115dc..58f6a5f57 100644
 From 34b82d947168b6ebcf1c51a031e5ab12901703b2 Mon Sep 17 00:00:00 2001
 From: wszqkzqk <wszqkzqk@qq.com>
 Date: Sun, 30 Oct 2022 18:59:57 +0800
-Subject: [PATCH 12/14] fix `"`
+Subject: [PATCH 12/15] fix `"`
 
 ---
  tests/parser/verbatim-template.vala | 2 +-
@@ -784,7 +784,7 @@ index 400418025..4a3db1fa5 100644
 From 7662471743db4c0dabd9137ec16eb761ed2e710a Mon Sep 17 00:00:00 2001
 From: wszqkzqk <wszqkzqk@qq.com>
 Date: Sun, 30 Oct 2022 19:20:46 +0800
-Subject: [PATCH 13/14] genie: add support for verbatim template(fix)
+Subject: [PATCH 13/15] genie: add support for verbatim template(fix)
 
 ---
  vala/valageniescanner.vala | 40 ++++++++++++++++++++++++++++----------
@@ -892,7 +892,7 @@ index ef54ae7d3..2592214dc 100644
 From b6f25b2b20a08188fbc94227bd3dbbe09fe80aef Mon Sep 17 00:00:00 2001
 From: wszqkzqk <wszqkzqk@qq.com>
 Date: Sun, 30 Oct 2022 19:36:23 +0800
-Subject: [PATCH 14/14] Add C-expected
+Subject: [PATCH 14/15] Add C-expected
 
 ---
  tests/parser/verbatim-template.c-expected | 73 +++++++++++++++++++++++
@@ -978,6 +978,100 @@ index 000000000..2ba242fbf
 +	return 0;
 +}
 +
+-- 
+2.38.0
+
+
+From f045a112a82a29465db5458408746cc479aae8c3 Mon Sep 17 00:00:00 2001
+From: wszqkzqk <wszqkzqk@qq.com>
+Date: Sun, 30 Oct 2022 19:59:24 +0800
+Subject: [PATCH 15/15] Revert "Add C-expected"
+
+This reverts commit b6f25b2b20a08188fbc94227bd3dbbe09fe80aef.
+---
+ tests/parser/verbatim-template.c-expected | 73 -----------------------
+ 1 file changed, 73 deletions(-)
+ delete mode 100644 tests/parser/verbatim-template.c-expected
+
+diff --git a/tests/parser/verbatim-template.c-expected b/tests/parser/verbatim-template.c-expected
+deleted file mode 100644
+index 2ba242fbf..000000000
+--- a/tests/parser/verbatim-template.c-expected
++++ /dev/null
+@@ -1,73 +0,0 @@
+-/* verbatim-template.c generated by valac, the Vala compiler
+- * generated from verbatim-template.vala, do not modify */
+-
+-#include <stdlib.h>
+-#include <string.h>
+-#include <glib.h>
+-
+-#define _g_free0(var) (var = (g_free (var), NULL))
+-#define _vala_assert(expr, msg) if G_LIKELY (expr) ; else g_assertion_message_expr (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, msg);
+-#define _vala_return_if_fail(expr, msg) if G_LIKELY (expr) ; else { g_return_if_fail_warning (G_LOG_DOMAIN, G_STRFUNC, msg); return; }
+-#define _vala_return_val_if_fail(expr, msg, val) if G_LIKELY (expr) ; else { g_return_if_fail_warning (G_LOG_DOMAIN, G_STRFUNC, msg); return val; }
+-#define _vala_warn_if_fail(expr, msg) if G_LIKELY (expr) ; else g_warn_message (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, msg);
+-
+-VALA_EXTERN const gchar* m (void);
+-static void _vala_main (void);
+-
+-const gchar*
+-m (void)
+-{
+-	const gchar* result;
+-	result = "foo";
+-	return result;
+-}
+-
+-static const gchar*
+-string_to_string (const gchar* self)
+-{
+-	const gchar* result;
+-	g_return_val_if_fail (self != NULL, NULL);
+-	result = self;
+-	return result;
+-}
+-
+-static void
+-_vala_main (void)
+-{
+-	gchar* _result_ = NULL;
+-	gchar* _tmp0_;
+-	const gchar* _tmp1_;
+-	gint i = 0;
+-	gchar* _tmp2_;
+-	gchar* _tmp3_;
+-	const gchar* _tmp4_;
+-	const gchar* _tmp5_;
+-	gchar* _tmp6_;
+-	const gchar* _tmp7_;
+-	_tmp0_ = g_strdup ("");
+-	_g_free0 (_result_);
+-	_result_ = _tmp0_;
+-	_tmp1_ = _result_;
+-	_vala_assert (g_strcmp0 (_tmp1_, "") == 0, "result == \"\"");
+-	i = 42;
+-	_tmp2_ = g_strdup_printf ("%i", i);
+-	_tmp3_ = _tmp2_;
+-	_tmp4_ = m ();
+-	_tmp5_ = string_to_string (_tmp4_);
+-	_tmp6_ = g_strconcat ("i=", _tmp3_, " \nm=", _tmp5_, " \n", "$", NULL);
+-	_g_free0 (_result_);
+-	_result_ = _tmp6_;
+-	_g_free0 (_tmp3_);
+-	_tmp7_ = _result_;
+-	_vala_assert (g_strcmp0 (_tmp7_, "i=42 \nm=foo \n$") == 0, "result == \"i=42 \\nm=foo \\n$\"");
+-	_g_free0 (_result_);
+-}
+-
+-int
+-main (int argc,
+-      char ** argv)
+-{
+-	_vala_main ();
+-	return 0;
+-}
+-
 -- 
 2.38.0
 
