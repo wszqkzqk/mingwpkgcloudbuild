@@ -992,16 +992,16 @@ index 000000000..108cae7c5
 2.38.0
 
 
-From cc296dd724e2016adb7f78436f8eb9b1862365d5 Mon Sep 17 00:00:00 2001
+From f829ef4d59e99780ec596459ffb0aafbbdee8e46 Mon Sep 17 00:00:00 2001
 From: wszqkzqk <wszqkzqk@qq.com>
-Date: Sun, 30 Oct 2022 21:32:33 +0800
+Date: Sun, 30 Oct 2022 21:48:45 +0800
 Subject: [PATCH 15/15] fix and test for genie
 
 ---
  tests/Makefile.am                |  1 +
- tests/genie/verbatim-template.gs |  9 +++++++++
- vala/valageniescanner.vala       | 11 ++++++++---
- 3 files changed, 18 insertions(+), 3 deletions(-)
+ tests/genie/verbatim-template.gs | 12 ++++++++++++
+ vala/valageniescanner.vala       | 12 +++++++++---
+ 3 files changed, 22 insertions(+), 3 deletions(-)
  create mode 100644 tests/genie/verbatim-template.gs
 
 diff --git a/tests/Makefile.am b/tests/Makefile.am
@@ -1018,10 +1018,13 @@ index 158e30e0f..b93d4963c 100644
  	bindings/gio/memoryoutputstream.vala \
 diff --git a/tests/genie/verbatim-template.gs b/tests/genie/verbatim-template.gs
 new file mode 100644
-index 000000000..11473eb70
+index 000000000..035824a40
 --- /dev/null
 +++ b/tests/genie/verbatim-template.gs
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,12 @@
++def m():int
++	return 42
++
 +init
 +	var result = @""""""
 +	assert (result == "")
@@ -1032,13 +1035,14 @@ index 000000000..11473eb70
 +$$"""
 +	assert (result == "i=42 \nm=foo \n$")
 diff --git a/vala/valageniescanner.vala b/vala/valageniescanner.vala
-index 2592214dc..aff16b65a 100644
+index 2592214dc..249afbd22 100644
 --- a/vala/valageniescanner.vala
 +++ b/vala/valageniescanner.vala
-@@ -980,9 +980,14 @@ public class Vala.Genie.Scanner {
+@@ -980,9 +980,15 @@ public class Vala.Genie.Scanner {
  			type = get_identifier_or_keyword (begin, len);
  		} else if (current[0] == '@') {
  			if (current < end - 1 && current[1] == '"') {
++				current += 1;
 +				if (current < end - 5 && current[1] == '"' && current[2] == '"') {
 +					current += 3;
 +					state_stack += State.VERBATIM_TEMPLATE;
@@ -1052,7 +1056,7 @@ index 2592214dc..aff16b65a 100644
  			} else {
  				token_begin.pos++; // @ is not part of the identifier
  				current++;
-@@ -1073,7 +1078,7 @@ public class Vala.Genie.Scanner {
+@@ -1073,7 +1079,7 @@ public class Vala.Genie.Scanner {
  				if (state_stack.length > 0) {
  					state_stack.length--;
  				}
