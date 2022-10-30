@@ -1,7 +1,7 @@
 From b2abdfdb5acc746aecc9f5aa8838b192ec41b7f7 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Fri, 28 Oct 2022 23:47:56 +0800
-Subject: [PATCH 1/7] add support for verbatim template string
+Subject: [PATCH 1/8] add support for verbatim template string
 
 ---
  vala/valaparser.vala    |  7 ++++++
@@ -180,7 +180,7 @@ index 2c64ec1b0..6097beaff 100644
 From 7b79335175fbde85d1f3b3482d1a459038e50a1f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 29 Oct 2022 00:34:35 +0800
-Subject: [PATCH 2/7] add test for verbatim template
+Subject: [PATCH 2/8] add test for verbatim template
 
 ---
  tests/Makefile.am                           | 1 +
@@ -219,7 +219,7 @@ index 000000000..f0981c067
 From e742c9efd8b1a7e377c0b0368a7d0adfd70d32c0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 29 Oct 2022 01:42:06 +0800
-Subject: [PATCH 3/7] support string ends with '"'
+Subject: [PATCH 3/8] support string ends with '"'
 
 ---
  vala/valascanner.vala | 2 +-
@@ -245,7 +245,7 @@ index 3fdd55a4d..0291cac30 100644
 From 083b3cb117370a6df5e8d6e21d69752a196633e6 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 29 Oct 2022 09:52:30 +0800
-Subject: [PATCH 4/7] genie: add support for verbatim template string
+Subject: [PATCH 4/8] genie: add support for verbatim template string
 
 ---
  vala/valagenieparser.vala    | 7 +++++++
@@ -311,7 +311,7 @@ index 08bef53fd..fc46724b4 100644
 From ccb39e169fffa1ff1fd1981e8920ccde33c49984 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 29 Oct 2022 23:19:05 +0800
-Subject: [PATCH 5/7] Revert "support string ends with '"'"
+Subject: [PATCH 5/8] Revert "support string ends with '"'"
 
 This reverts commit e742c9efd8b1a7e377c0b0368a7d0adfd70d32c0.
 ---
@@ -338,7 +338,7 @@ index 0291cac30..3fdd55a4d 100644
 From 38db385897de93e32a96c6130cc9f08eae2902ef Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 29 Oct 2022 23:40:59 +0800
-Subject: [PATCH 6/7] support strings endwith '"' (fixed)
+Subject: [PATCH 6/8] support strings endwith '"' (fixed)
 
 ---
  vala/valascanner.vala | 3 ++-
@@ -372,7 +372,7 @@ index 3fdd55a4d..60fa7958e 100644
 From 8fead43be3b748ee66d04a88c5aa3b6b51d9c8d0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 29 Oct 2022 23:56:03 +0800
-Subject: [PATCH 7/7] add more tests
+Subject: [PATCH 7/8] add more tests
 
 ---
  tests/scanner/string-verbatim-template.vala | 4 ++++
@@ -391,6 +391,32 @@ index f0981c067..c615de9c6 100644
 +    var s4 = @"\"Hello, World! \"a\" == $a\"";
 +    assert(s3 == s4);
  }
+-- 
+2.38.1.windows.1
+
+
+From 343013c0ca77b9ba0413d9d6c3b0d80a05cd0d96 Mon Sep 17 00:00:00 2001
+From: wszqkzqk <wszqkzqk@qq.com>
+Date: Sun, 30 Oct 2022 10:33:42 +0800
+Subject: [PATCH 8/8] fix the support of `@""`
+
+---
+ vala/valascanner.vala | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/vala/valascanner.vala b/vala/valascanner.vala
+index 60fa7958e..c545115dc 100644
+--- a/vala/valascanner.vala
++++ b/vala/valascanner.vala
+@@ -882,7 +882,7 @@ public class Vala.Scanner {
+ 		} else if (current[0] == '@') {
+ 			if (current < end - 1 && current[1] == '"') {
+ 				current += 1;
+-				if (current < end - 6 && begin[1] == '"' && begin[2] == '"') {
++				if (current < end - 5 && current[1] == '"' && current[2] == '"') {
+ 					current += 3;
+ 					state_stack += State.VERBATIM_TEMPLATE;
+ 				} else {
 -- 
 2.38.1.windows.1
 
