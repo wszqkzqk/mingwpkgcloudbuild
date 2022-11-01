@@ -1,459 +1,53 @@
-From b2abdfdb5acc746aecc9f5aa8838b192ec41b7f7 Mon Sep 17 00:00:00 2001
+From 3c3ee793b499be959b3ed7f1f74014713382a438 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Fri, 28 Oct 2022 23:47:56 +0800
-Subject: [PATCH 01/11] add support for verbatim template string
+Subject: [PATCH 1/2] vala: Add support for verbatim template string
 
+Fixes https://gitlab.gnome.org/GNOME/vala/issues/1373
 ---
- vala/valaparser.vala    |  7 ++++++
- vala/valascanner.vala   | 49 +++++++++++++++++++++++++++++++----------
- vala/valatokentype.vala |  2 ++
- 3 files changed, 46 insertions(+), 12 deletions(-)
-
-diff --git a/vala/valaparser.vala b/vala/valaparser.vala
-index f703e9c86..23b1e7db4 100644
---- a/vala/valaparser.vala
-+++ b/vala/valaparser.vala
-@@ -384,6 +384,11 @@ public class Vala.Parser : CodeVisitor {
- 			string raw_string = get_last_string ();
- 			string escaped_string = raw_string.substring (3, raw_string.length - 6).escape ("");
- 			return new StringLiteral ("\"%s\"".printf (escaped_string), get_src (begin));
-+		case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
-+			next ();
-+			string raw_string = get_last_string ();
-+			string escaped_string = raw_string.escape ("");
-+			return new StringLiteral ("\"%s\"".printf (escaped_string), get_src (begin));
- 		case TokenType.NULL:
- 			next ();
- 			return new NullLiteral (get_src (begin));
-@@ -719,6 +724,7 @@ public class Vala.Parser : CodeVisitor {
- 		case TokenType.REGEX_LITERAL:
- 		case TokenType.TEMPLATE_STRING_LITERAL:
- 		case TokenType.VERBATIM_STRING_LITERAL:
-+		case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
- 		case TokenType.NULL:
- 			expr = parse_literal ();
- 			break;
-@@ -1269,6 +1275,7 @@ public class Vala.Parser : CodeVisitor {
- 						case TokenType.STRING_LITERAL:
- 						case TokenType.TEMPLATE_STRING_LITERAL:
- 						case TokenType.VERBATIM_STRING_LITERAL:
-+						case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
- 						case TokenType.REGEX_LITERAL:
- 						case TokenType.NULL:
- 						case TokenType.THIS:
-diff --git a/vala/valascanner.vala b/vala/valascanner.vala
-index daeb97feb..3fdd55a4d 100644
---- a/vala/valascanner.vala
-+++ b/vala/valascanner.vala
-@@ -54,7 +54,8 @@ public class Vala.Scanner {
- 		BRACKET,
- 		TEMPLATE,
- 		TEMPLATE_PART,
--		REGEX_LITERAL
-+		REGEX_LITERAL,
-+		VERBATIM_TEMPLATE
- 	}
- 
- 	public Scanner (SourceFile source_file) {
-@@ -82,6 +83,10 @@ public class Vala.Scanner {
- 		return (state_stack.length > 0 && state_stack[state_stack.length - 1] == State.TEMPLATE);
- 	}
- 
-+	bool in_verbatim_template () {
-+		return (state_stack.length > 0 && state_stack[state_stack.length - 1] == State.VERBATIM_TEMPLATE);
-+	}
-+
- 	bool in_template_part () {
- 		return (state_stack.length > 0 && state_stack[state_stack.length - 1] == State.TEMPLATE_PART);
- 	}
-@@ -685,7 +690,7 @@ public class Vala.Scanner {
- 		return type;
- 	}
- 
--	public TokenType read_template_token (out SourceLocation token_begin, out SourceLocation token_end) {
-+	public TokenType read_template_token (out SourceLocation token_begin, out SourceLocation token_end, bool is_verbatim) {
- 		TokenType type;
- 		char* begin = current;
- 		token_begin = SourceLocation (begin, line, column);
-@@ -697,9 +702,21 @@ public class Vala.Scanner {
- 		} else {
- 			switch (current[0]) {
- 			case '"':
--				type = TokenType.CLOSE_TEMPLATE;
--				current++;
--				state_stack.length--;
-+				if (is_verbatim) {
-+					if (current < end -2 && current[1] == '"' && current[2] == '"') {
-+						type = TokenType.CLOSE_TEMPLATE;
-+						current += 3;
-+						state_stack.length--;
-+					} else {
-+						type = TokenType.VERBATIM_TEMPLATE_STRING_LITERAL;
-+						current++;
-+						token_length_in_chars++;
-+					}
-+				} else {
-+					type = TokenType.CLOSE_TEMPLATE;
-+					current++;
-+					state_stack.length--;
-+				}
- 				break;
- 			case '$':
- 				token_begin.pos++; // $ is not part of following token
-@@ -718,19 +735,19 @@ public class Vala.Scanner {
- 					state_stack += State.PARENS;
- 					return read_token (out token_begin, out token_end);
- 				} else if (current[0] == '$') {
--					type = TokenType.TEMPLATE_STRING_LITERAL;
-+					type = (is_verbatim) ? TokenType.VERBATIM_TEMPLATE_STRING_LITERAL : TokenType.TEMPLATE_STRING_LITERAL;
- 					current++;
- 					state_stack += State.TEMPLATE_PART;
- 				} else {
- 					Report.error (get_source_reference (1), "unexpected character");
--					return read_template_token (out token_begin, out token_end);
-+					return read_template_token (out token_begin, out token_end, is_verbatim);
- 				}
- 				break;
- 			default:
--				type = TokenType.TEMPLATE_STRING_LITERAL;
-+				type = (is_verbatim) ? TokenType.VERBATIM_TEMPLATE_STRING_LITERAL : TokenType.TEMPLATE_STRING_LITERAL;
- 				token_length_in_chars = 0;
- 				while (current < end && current[0] != '"' && current[0] != '$') {
--					if (current[0] == '\\') {
-+					if (current[0] == '\\' && !is_verbatim) {
- 						current++;
- 						token_length_in_chars++;
- 						if (current >= end) {
-@@ -830,7 +847,9 @@ public class Vala.Scanner {
- 
- 	public TokenType read_token (out SourceLocation token_begin, out SourceLocation token_end) {
- 		if (in_template ()) {
--			return read_template_token (out token_begin, out token_end);
-+			return read_template_token (out token_begin, out token_end, false);
-+		} else if (in_verbatim_template ()) {
-+			return read_template_token (out token_begin, out token_end, true);
- 		} else if (in_template_part ()) {
- 			state_stack.length--;
- 
-@@ -861,9 +880,15 @@ public class Vala.Scanner {
- 			type = get_identifier_or_keyword (begin, len);
- 		} else if (current[0] == '@') {
- 			if (current < end - 1 && current[1] == '"') {
-+				current += 1;
-+				if (current < end - 6 && begin[1] == '"' && begin[2] == '"') {
-+					current += 3;
-+					state_stack += State.VERBATIM_TEMPLATE;
-+				} else {
-+					current += 1;
-+					state_stack += State.TEMPLATE;
-+				}
- 				type = TokenType.OPEN_TEMPLATE;
--				current += 2;
--				state_stack += State.TEMPLATE;
- 			} else {
- 				token_begin.pos++; // @ is not part of the identifier
- 				current++;
-diff --git a/vala/valatokentype.vala b/vala/valatokentype.vala
-index 2c64ec1b0..6097beaff 100644
---- a/vala/valatokentype.vala
-+++ b/vala/valatokentype.vala
-@@ -149,6 +149,7 @@ public enum Vala.TokenType {
- 	USING,
- 	VAR,
- 	VERBATIM_STRING_LITERAL,
-+	VERBATIM_TEMPLATE_STRING_LITERAL,
- 	VIRTUAL,
- 	VOID,
- 	VOLATILE,
-@@ -284,6 +285,7 @@ public enum Vala.TokenType {
- 		case USING: return "`using'";
- 		case VAR: return "`var'";
- 		case VERBATIM_STRING_LITERAL: return "verbatim string literal";
-+		case VERBATIM_TEMPLATE_STRING_LITERAL: return "verbatim template string literal";
- 		case VIRTUAL: return "`virtual'";
- 		case VOID: return "`void'";
- 		case VOLATILE: return "`volatile'";
--- 
-2.38.1.windows.1
-
-
-From 7b79335175fbde85d1f3b3482d1a459038e50a1f Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
-Date: Sat, 29 Oct 2022 00:34:35 +0800
-Subject: [PATCH 02/11] add test for verbatim template
-
----
- tests/Makefile.am                           | 1 +
- tests/scanner/string-verbatim-template.vala | 6 ++++++
- 2 files changed, 7 insertions(+)
- create mode 100644 tests/scanner/string-verbatim-template.vala
-
-diff --git a/tests/Makefile.am b/tests/Makefile.am
-index 10ff6183f..a2cd53a57 100644
---- a/tests/Makefile.am
-+++ b/tests/Makefile.am
-@@ -908,6 +908,7 @@ TESTS = \
- 	scanner/string-escape-x-digit-length.test \
- 	scanner/string-escape-x-empty.test \
- 	scanner/string-escape-x.vala \
-+	scanner/string-verbatim-template.vala \
- 	parser/argument-list-incomplete.test \
- 	parser/array-creation-invalid.test \
- 	parser/array-length.vala \
-diff --git a/tests/scanner/string-verbatim-template.vala b/tests/scanner/string-verbatim-template.vala
-new file mode 100644
-index 000000000..f0981c067
---- /dev/null
-+++ b/tests/scanner/string-verbatim-template.vala
-@@ -0,0 +1,6 @@
-+void main () {
-+    int a = 1;
-+    var s1 = @"""a is $a, '\' is '\'""";
-+    var s2 = @"a is $a, '\\' is '\\'";
-+    assert(s1 == s2);
-+}
--- 
-2.38.1.windows.1
-
-
-From e742c9efd8b1a7e377c0b0368a7d0adfd70d32c0 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
-Date: Sat, 29 Oct 2022 01:42:06 +0800
-Subject: [PATCH 03/11] support string ends with '"'
-
----
- vala/valascanner.vala | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/vala/valascanner.vala b/vala/valascanner.vala
-index 3fdd55a4d..0291cac30 100644
---- a/vala/valascanner.vala
-+++ b/vala/valascanner.vala
-@@ -703,7 +703,7 @@ public class Vala.Scanner {
- 			switch (current[0]) {
- 			case '"':
- 				if (is_verbatim) {
--					if (current < end -2 && current[1] == '"' && current[2] == '"') {
-+					if (current == end - 3 && current[1] == '"' && current[2] == '"') {
- 						type = TokenType.CLOSE_TEMPLATE;
- 						current += 3;
- 						state_stack.length--;
--- 
-2.38.1.windows.1
-
-
-From 083b3cb117370a6df5e8d6e21d69752a196633e6 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
-Date: Sat, 29 Oct 2022 09:52:30 +0800
-Subject: [PATCH 04/11] genie: add support for verbatim template string
-
----
- vala/valagenieparser.vala    | 7 +++++++
- vala/valagenietokentype.vala | 2 ++
- 2 files changed, 9 insertions(+)
-
-diff --git a/vala/valagenieparser.vala b/vala/valagenieparser.vala
-index 7c7c48309..9781cd339 100644
---- a/vala/valagenieparser.vala
-+++ b/vala/valagenieparser.vala
-@@ -394,6 +394,11 @@ public class Vala.Genie.Parser : CodeVisitor {
- 			string raw_string = get_last_string ();
- 			string escaped_string = raw_string.substring (3, raw_string.length - 6).escape ("");
- 			return new StringLiteral ("\"%s\"".printf (escaped_string), get_src (begin));
-+		case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
-+			next ();
-+			string raw_string = get_last_string ();
-+			string escaped_string = raw_string.escape ("");
-+			return new StringLiteral ("\"%s\"".printf (escaped_string), get_src (begin));
- 		case TokenType.NULL:
- 			next ();
- 			return new NullLiteral (get_src (begin));
-@@ -701,6 +706,7 @@ public class Vala.Genie.Parser : CodeVisitor {
- 		case TokenType.STRING_LITERAL:
- 		case TokenType.TEMPLATE_STRING_LITERAL:
- 		case TokenType.VERBATIM_STRING_LITERAL:
-+		case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
- 		case TokenType.NULL:
- 			expr = parse_literal ();
- 			break;
-@@ -1285,6 +1291,7 @@ public class Vala.Genie.Parser : CodeVisitor {
- 					case TokenType.STRING_LITERAL:
- 					case TokenType.TEMPLATE_STRING_LITERAL:
- 					case TokenType.VERBATIM_STRING_LITERAL:
-+					case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
- 					case TokenType.NULL:
- 					case TokenType.SELF:
- 					case TokenType.SUPER:
-diff --git a/vala/valagenietokentype.vala b/vala/valagenietokentype.vala
-index 08bef53fd..fc46724b4 100644
---- a/vala/valagenietokentype.vala
-+++ b/vala/valagenietokentype.vala
-@@ -163,6 +163,7 @@ public enum Vala.Genie.TokenType {
- 	USES,
- 	VAR,
- 	VERBATIM_STRING_LITERAL,
-+	VERBATIM_TEMPLATE_STRING_LITERAL,
- 	VIRTUAL,
- 	VOID,
- 	VOLATILE,
-@@ -311,6 +312,7 @@ public enum Vala.Genie.TokenType {
- 		case USES: return "`uses'";
- 		case VAR: return "`var'";
- 		case VERBATIM_STRING_LITERAL: return "verbatim string literal";
-+		case VERBATIM_TEMPLATE_STRING_LITERAL: return "verbatim template string literal";
- 		case VIRTUAL: return "`virtual'";
- 		case VOID: return "`void'";
- 		case VOLATILE: return "`volatile'";
--- 
-2.38.1.windows.1
-
-
-From ccb39e169fffa1ff1fd1981e8920ccde33c49984 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
-Date: Sat, 29 Oct 2022 23:19:05 +0800
-Subject: [PATCH 05/11] Revert "support string ends with '"'"
-
-This reverts commit e742c9efd8b1a7e377c0b0368a7d0adfd70d32c0.
----
- vala/valascanner.vala | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/vala/valascanner.vala b/vala/valascanner.vala
-index 0291cac30..3fdd55a4d 100644
---- a/vala/valascanner.vala
-+++ b/vala/valascanner.vala
-@@ -703,7 +703,7 @@ public class Vala.Scanner {
- 			switch (current[0]) {
- 			case '"':
- 				if (is_verbatim) {
--					if (current == end - 3 && current[1] == '"' && current[2] == '"') {
-+					if (current < end -2 && current[1] == '"' && current[2] == '"') {
- 						type = TokenType.CLOSE_TEMPLATE;
- 						current += 3;
- 						state_stack.length--;
--- 
-2.38.1.windows.1
-
-
-From 38db385897de93e32a96c6130cc9f08eae2902ef Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
-Date: Sat, 29 Oct 2022 23:40:59 +0800
-Subject: [PATCH 06/11] support strings endwith '"' (fixed)
-
----
- vala/valascanner.vala | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/vala/valascanner.vala b/vala/valascanner.vala
-index 3fdd55a4d..60fa7958e 100644
---- a/vala/valascanner.vala
-+++ b/vala/valascanner.vala
-@@ -703,7 +703,7 @@ public class Vala.Scanner {
- 			switch (current[0]) {
- 			case '"':
- 				if (is_verbatim) {
--					if (current < end -2 && current[1] == '"' && current[2] == '"') {
-+					if (current < end -2 && current[1] == '"' && current[2] == '"' && current[3] != '"') {
- 						type = TokenType.CLOSE_TEMPLATE;
- 						current += 3;
- 						state_stack.length--;
-@@ -711,6 +711,7 @@ public class Vala.Scanner {
- 						type = TokenType.VERBATIM_TEMPLATE_STRING_LITERAL;
- 						current++;
- 						token_length_in_chars++;
-+						state_stack += State.TEMPLATE_PART;
- 					}
- 				} else {
- 					type = TokenType.CLOSE_TEMPLATE;
--- 
-2.38.1.windows.1
-
-
-From 8fead43be3b748ee66d04a88c5aa3b6b51d9c8d0 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
-Date: Sat, 29 Oct 2022 23:56:03 +0800
-Subject: [PATCH 07/11] add more tests
-
----
- tests/scanner/string-verbatim-template.vala | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/tests/scanner/string-verbatim-template.vala b/tests/scanner/string-verbatim-template.vala
-index f0981c067..c615de9c6 100644
---- a/tests/scanner/string-verbatim-template.vala
-+++ b/tests/scanner/string-verbatim-template.vala
-@@ -3,4 +3,8 @@ void main () {
-     var s1 = @"""a is $a, '\' is '\'""";
-     var s2 = @"a is $a, '\\' is '\\'";
-     assert(s1 == s2);
-+
-+    var s3 = @""""Hello, World! "a" == $a"""";
-+    var s4 = @"\"Hello, World! \"a\" == $a\"";
-+    assert(s3 == s4);
- }
--- 
-2.38.1.windows.1
-
-
-From 343013c0ca77b9ba0413d9d6c3b0d80a05cd0d96 Mon Sep 17 00:00:00 2001
-From: wszqkzqk <wszqkzqk@qq.com>
-Date: Sun, 30 Oct 2022 10:33:42 +0800
-Subject: [PATCH 08/11] fix the support of `@""`
-
----
- vala/valascanner.vala | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/vala/valascanner.vala b/vala/valascanner.vala
-index 60fa7958e..c545115dc 100644
---- a/vala/valascanner.vala
-+++ b/vala/valascanner.vala
-@@ -882,7 +882,7 @@ public class Vala.Scanner {
- 		} else if (current[0] == '@') {
- 			if (current < end - 1 && current[1] == '"') {
- 				current += 1;
--				if (current < end - 6 && begin[1] == '"' && begin[2] == '"') {
-+				if (current < end - 5 && current[1] == '"' && current[2] == '"') {
- 					current += 3;
- 					state_stack += State.VERBATIM_TEMPLATE;
- 				} else {
--- 
-2.38.1.windows.1
-
-
-From 86c1f6f8b8fb073923e3559a74b8c134b2d3ac8e Mon Sep 17 00:00:00 2001
-From: Rico Tzschichholz <ricotz@ubuntu.com>
-Date: Sun, 30 Oct 2022 10:19:22 +0100
-Subject: [PATCH 09/11] extend tests
-
----
- tests/Makefile.am                             |  2 +
- tests/parser/template.c-expected              | 29 +++++-----
- tests/parser/template.vala                    |  1 +
- tests/parser/verbatim-template.vala           | 15 +++++
- tests/scanner/string-template.c-expected      | 57 +++++++++++++++++++
- tests/scanner/string-template.vala            |  8 +++
- .../string-verbatim-template.c-expected       | 57 +++++++++++++++++++
- tests/scanner/string-verbatim-template.vala   | 12 ++--
- 8 files changed, 161 insertions(+), 20 deletions(-)
+ tests/Makefile.am                             |   4 +
+ .../genie/literal-template-string.c-expected  |  54 ++++++---
+ tests/genie/literal-template-string.gs        |  13 ++-
+ tests/genie/verbatim-template.c-expected      | 103 ++++++++++++++++++
+ tests/genie/verbatim-template.gs              |  16 +++
+ tests/parser/template.c-expected              |  29 ++---
+ tests/parser/template.vala                    |   1 +
+ tests/parser/verbatim-template.c-expected     |  83 ++++++++++++++
+ tests/parser/verbatim-template.vala           |  15 +++
+ tests/scanner/string-template.c-expected      |  57 ++++++++++
+ tests/scanner/string-template.vala            |   8 ++
+ .../string-verbatim-template.c-expected       |  57 ++++++++++
+ tests/scanner/string-verbatim-template.vala   |   8 ++
+ vala/valagenieparser.vala                     |   7 ++
+ vala/valageniescanner.vala                    |  47 ++++++--
+ vala/valagenietokentype.vala                  |   2 +
+ vala/valaparser.vala                          |   7 ++
+ vala/valascanner.vala                         |  47 ++++++--
+ vala/valatokentype.vala                       |   2 +
+ 19 files changed, 508 insertions(+), 52 deletions(-)
+ create mode 100644 tests/genie/verbatim-template.c-expected
+ create mode 100644 tests/genie/verbatim-template.gs
+ create mode 100644 tests/parser/verbatim-template.c-expected
  create mode 100644 tests/parser/verbatim-template.vala
  create mode 100644 tests/scanner/string-template.c-expected
  create mode 100644 tests/scanner/string-template.vala
  create mode 100644 tests/scanner/string-verbatim-template.c-expected
+ create mode 100644 tests/scanner/string-verbatim-template.vala
 
 diff --git a/tests/Makefile.am b/tests/Makefile.am
-index a2cd53a57..158e30e0f 100644
+index 10ff6183f..b93d4963c 100644
 --- a/tests/Makefile.am
 +++ b/tests/Makefile.am
-@@ -908,6 +908,7 @@ TESTS = \
+@@ -908,6 +908,8 @@ TESTS = \
  	scanner/string-escape-x-digit-length.test \
  	scanner/string-escape-x-empty.test \
  	scanner/string-escape-x.vala \
 +	scanner/string-template.vala \
- 	scanner/string-verbatim-template.vala \
++	scanner/string-verbatim-template.vala \
  	parser/argument-list-incomplete.test \
  	parser/array-creation-invalid.test \
-@@ -1007,6 +1008,7 @@ TESTS = \
+ 	parser/array-length.vala \
+@@ -1006,6 +1008,7 @@ TESTS = \
  	parser/using-invalid-namespace.test \
  	parser/var-type-dynamic.vala \
  	parser/var-type-nullable.vala \
@@ -461,6 +55,254 @@ index a2cd53a57..158e30e0f 100644
  	parser/with-embedded.vala \
  	parser/with-empty.vala \
  	parser/with-invalid-declaration.test \
+@@ -1403,6 +1406,7 @@ TESTS = \
+ 	genie/struct-after-class.gs \
+ 	genie/try-except-finally.gs \
+ 	genie/typeof.gs \
++	genie/verbatim-template.gs \
+ 	genie/while.gs \
+ 	glib/conditional-glib-api.vala \
+ 	bindings/gio/memoryoutputstream.vala \
+diff --git a/tests/genie/literal-template-string.c-expected b/tests/genie/literal-template-string.c-expected
+index 9dad5e432..0333b8546 100644
+--- a/tests/genie/literal-template-string.c-expected
++++ b/tests/genie/literal-template-string.c-expected
+@@ -5,15 +5,36 @@
+ #include <string.h>
+ #include <glib.h>
+ 
++#if !defined(VALA_EXTERN)
++#if defined(_MSC_VER)
++#define VALA_EXTERN __declspec(dllexport) extern
++#elif __GNUC__ >= 4
++#define VALA_EXTERN __attribute__((visibility("default"))) extern
++#else
++#define VALA_EXTERN extern
++#endif
++#endif
++
+ #define _g_free0(var) (var = (g_free (var), NULL))
+ #define _vala_assert(expr, msg) if G_LIKELY (expr) ; else g_assertion_message_expr (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, msg);
+ #define _vala_return_if_fail(expr, msg) if G_LIKELY (expr) ; else { g_return_if_fail_warning (G_LOG_DOMAIN, G_STRFUNC, msg); return; }
+ #define _vala_return_val_if_fail(expr, msg, val) if G_LIKELY (expr) ; else { g_return_if_fail_warning (G_LOG_DOMAIN, G_STRFUNC, msg); return val; }
+ #define _vala_warn_if_fail(expr, msg) if G_LIKELY (expr) ; else g_warn_message (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, msg);
+ 
++VALA_EXTERN gchar* m (void);
+ static void _vala_main (gchar** args,
+                  gint args_length1);
+ 
++gchar*
++m (void)
++{
++	gchar* _tmp0_;
++	gchar* result;
++	_tmp0_ = g_strdup ("foo");
++	result = _tmp0_;
++	return result;
++}
++
+ static const gchar*
+ string_to_string (const gchar* self)
+ {
+@@ -27,28 +48,35 @@ static void
+ _vala_main (gchar** args,
+             gint args_length1)
+ {
+-	gchar* a = NULL;
++	gchar* _result_ = NULL;
+ 	gchar* _tmp0_;
+-	gint b = 0;
+-	gchar* c = NULL;
+ 	const gchar* _tmp1_;
++	gint i = 0;
+ 	gchar* _tmp2_;
+ 	gchar* _tmp3_;
+ 	gchar* _tmp4_;
+ 	gchar* _tmp5_;
+-	_tmp0_ = g_strdup ("test");
+-	a = _tmp0_;
+-	b = 100;
+-	_tmp1_ = string_to_string (a);
+-	_tmp2_ = g_strdup_printf ("%i", b);
++	const gchar* _tmp6_;
++	gchar* _tmp7_;
++	const gchar* _tmp8_;
++	_tmp0_ = g_strdup ("");
++	_result_ = _tmp0_;
++	_tmp1_ = _result_;
++	_vala_assert (g_strcmp0 (_tmp1_, "") == 0, "result == \"\"");
++	i = 42;
++	_tmp2_ = g_strdup_printf ("%i", i);
+ 	_tmp3_ = _tmp2_;
+-	_tmp4_ = g_strconcat (_tmp1_, _tmp3_, NULL);
++	_tmp4_ = m ();
+ 	_tmp5_ = _tmp4_;
++	_tmp6_ = string_to_string (_tmp5_);
++	_tmp7_ = g_strconcat ("i=", _tmp3_, " m=", _tmp6_, " ", "$", NULL);
++	_g_free0 (_result_);
++	_result_ = _tmp7_;
++	_g_free0 (_tmp5_);
+ 	_g_free0 (_tmp3_);
+-	c = _tmp5_;
+-	_vala_assert (g_strcmp0 (c, "test100") == 0, "c == \"test100\"");
+-	_g_free0 (c);
+-	_g_free0 (a);
++	_tmp8_ = _result_;
++	_vala_assert (g_strcmp0 (_tmp8_, "i=42 m=foo $") == 0, "result == \"i=42 m=foo $\"");
++	_g_free0 (_result_);
+ }
+ 
+ int
+diff --git a/tests/genie/literal-template-string.gs b/tests/genie/literal-template-string.gs
+index 87e75ae92..8c7dc617d 100644
+--- a/tests/genie/literal-template-string.gs
++++ b/tests/genie/literal-template-string.gs
+@@ -1,5 +1,10 @@
++def m():string
++	return "foo"
++
+ init
+-	var a = "test"
+-	var b = 100
+-	var c = @"$( a )$b"
+-	assert( c == "test100" )
++	result:string = @""
++	assert( result == "" )
++
++	i:int = 42
++	result = @"i=$i m=$( m() ) $$"
++	assert( result == "i=42 m=foo $" )
+diff --git a/tests/genie/verbatim-template.c-expected b/tests/genie/verbatim-template.c-expected
+new file mode 100644
+index 000000000..97531c04f
+--- /dev/null
++++ b/tests/genie/verbatim-template.c-expected
+@@ -0,0 +1,103 @@
++/* genie_verbatim_template.c generated by valac, the Vala compiler
++ * generated from genie_verbatim_template.gs, do not modify */
++
++#include <stdlib.h>
++#include <string.h>
++#include <glib.h>
++
++#if !defined(VALA_EXTERN)
++#if defined(_MSC_VER)
++#define VALA_EXTERN __declspec(dllexport) extern
++#elif __GNUC__ >= 4
++#define VALA_EXTERN __attribute__((visibility("default"))) extern
++#else
++#define VALA_EXTERN extern
++#endif
++#endif
++
++#define _g_free0(var) (var = (g_free (var), NULL))
++#define _vala_assert(expr, msg) if G_LIKELY (expr) ; else g_assertion_message_expr (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, msg);
++#define _vala_return_if_fail(expr, msg) if G_LIKELY (expr) ; else { g_return_if_fail_warning (G_LOG_DOMAIN, G_STRFUNC, msg); return; }
++#define _vala_return_val_if_fail(expr, msg, val) if G_LIKELY (expr) ; else { g_return_if_fail_warning (G_LOG_DOMAIN, G_STRFUNC, msg); return val; }
++#define _vala_warn_if_fail(expr, msg) if G_LIKELY (expr) ; else g_warn_message (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, msg);
++
++VALA_EXTERN gchar* m (void);
++static void _vala_main (gchar** args,
++                 gint args_length1);
++
++gchar*
++m (void)
++{
++	gchar* _tmp0_;
++	gchar* result;
++	_tmp0_ = g_strdup ("foo");
++	result = _tmp0_;
++	return result;
++}
++
++static const gchar*
++string_to_string (const gchar* self)
++{
++	const gchar* result;
++	g_return_val_if_fail (self != NULL, NULL);
++	result = self;
++	return result;
++}
++
++static void
++_vala_main (gchar** args,
++            gint args_length1)
++{
++	gchar* _result_ = NULL;
++	gchar* _tmp0_;
++	const gchar* _tmp1_;
++	gint i = 0;
++	gchar* _tmp2_;
++	gchar* _tmp3_;
++	gchar* _tmp4_;
++	gchar* _tmp5_;
++	const gchar* _tmp6_;
++	gchar* _tmp7_;
++	const gchar* _tmp8_;
++	gint a = 0;
++	gchar* _tmp9_;
++	gchar* _tmp10_;
++	gchar* _tmp11_;
++	const gchar* _tmp12_;
++	_tmp0_ = g_strdup ("");
++	_result_ = _tmp0_;
++	_tmp1_ = _result_;
++	_vala_assert (g_strcmp0 (_tmp1_, "") == 0, "result == \"\"");
++	i = 42;
++	_tmp2_ = g_strdup_printf ("%i", i);
++	_tmp3_ = _tmp2_;
++	_tmp4_ = m ();
++	_tmp5_ = _tmp4_;
++	_tmp6_ = string_to_string (_tmp5_);
++	_tmp7_ = g_strconcat ("i=", _tmp3_, " \nm=", _tmp6_, " \n", "$", NULL);
++	_g_free0 (_result_);
++	_result_ = _tmp7_;
++	_g_free0 (_tmp5_);
++	_g_free0 (_tmp3_);
++	_tmp8_ = _result_;
++	_vala_assert (g_strcmp0 (_tmp8_, "i=42 \nm=foo \n$") == 0, "result == \"i=42 \\nm=foo \\n$\"");
++	a = 4711;
++	_tmp9_ = g_strdup_printf ("%i", a);
++	_tmp10_ = _tmp9_;
++	_tmp11_ = g_strconcat ("\"", _tmp10_, "\"", "\"", NULL);
++	_g_free0 (_result_);
++	_result_ = _tmp11_;
++	_g_free0 (_tmp10_);
++	_tmp12_ = _result_;
++	_vala_assert (g_strcmp0 (_tmp12_, "\"4711\"\"") == 0, "result == \"\\\"4711\\\"\\\"\"");
++	_g_free0 (_result_);
++}
++
++int
++main (int argc,
++      char ** argv)
++{
++	_vala_main (argv, argc);
++	return 0;
++}
++
+diff --git a/tests/genie/verbatim-template.gs b/tests/genie/verbatim-template.gs
+new file mode 100644
+index 000000000..92f9a5c80
+--- /dev/null
++++ b/tests/genie/verbatim-template.gs
+@@ -0,0 +1,16 @@
++def m():string
++	return "foo"
++
++init
++	result:string = @""""""
++	assert( result == "" )
++
++	i:int = 42
++	result = @"""i=$i 
++m=$( m() ) 
++$$"""
++	assert( result == "i=42 \nm=foo \n$" )
++
++	a:int = 4711
++	result = @""""$a"""""
++	assert( result == "\"4711\"\"" )
 diff --git a/tests/parser/template.c-expected b/tests/parser/template.c-expected
 index 933aa14f5..093acfe15 100644
 --- a/tests/parser/template.c-expected
@@ -521,9 +363,98 @@ index b4a073676..f1fd76cfe 100644
  
  	int i = 42;
  	result = @"i=$i m=$(m ()) $$";
+diff --git a/tests/parser/verbatim-template.c-expected b/tests/parser/verbatim-template.c-expected
+new file mode 100644
+index 000000000..108cae7c5
+--- /dev/null
++++ b/tests/parser/verbatim-template.c-expected
+@@ -0,0 +1,83 @@
++/* parser_verbatim_template.c generated by valac, the Vala compiler
++ * generated from parser_verbatim_template.vala, do not modify */
++
++#include <stdlib.h>
++#include <string.h>
++#include <glib.h>
++
++#if !defined(VALA_EXTERN)
++#if defined(_MSC_VER)
++#define VALA_EXTERN __declspec(dllexport) extern
++#elif __GNUC__ >= 4
++#define VALA_EXTERN __attribute__((visibility("default"))) extern
++#else
++#define VALA_EXTERN extern
++#endif
++#endif
++
++#define _g_free0(var) (var = (g_free (var), NULL))
++#define _vala_assert(expr, msg) if G_LIKELY (expr) ; else g_assertion_message_expr (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, msg);
++#define _vala_return_if_fail(expr, msg) if G_LIKELY (expr) ; else { g_return_if_fail_warning (G_LOG_DOMAIN, G_STRFUNC, msg); return; }
++#define _vala_return_val_if_fail(expr, msg, val) if G_LIKELY (expr) ; else { g_return_if_fail_warning (G_LOG_DOMAIN, G_STRFUNC, msg); return val; }
++#define _vala_warn_if_fail(expr, msg) if G_LIKELY (expr) ; else g_warn_message (G_LOG_DOMAIN, __FILE__, __LINE__, G_STRFUNC, msg);
++
++VALA_EXTERN const gchar* m (void);
++static void _vala_main (void);
++
++const gchar*
++m (void)
++{
++	const gchar* result;
++	result = "foo";
++	return result;
++}
++
++static const gchar*
++string_to_string (const gchar* self)
++{
++	const gchar* result;
++	g_return_val_if_fail (self != NULL, NULL);
++	result = self;
++	return result;
++}
++
++static void
++_vala_main (void)
++{
++	gchar* _result_ = NULL;
++	gchar* _tmp0_;
++	const gchar* _tmp1_;
++	gint i = 0;
++	gchar* _tmp2_;
++	gchar* _tmp3_;
++	const gchar* _tmp4_;
++	const gchar* _tmp5_;
++	gchar* _tmp6_;
++	const gchar* _tmp7_;
++	_tmp0_ = g_strdup ("");
++	_g_free0 (_result_);
++	_result_ = _tmp0_;
++	_tmp1_ = _result_;
++	_vala_assert (g_strcmp0 (_tmp1_, "") == 0, "result == \"\"");
++	i = 42;
++	_tmp2_ = g_strdup_printf ("%i", i);
++	_tmp3_ = _tmp2_;
++	_tmp4_ = m ();
++	_tmp5_ = string_to_string (_tmp4_);
++	_tmp6_ = g_strconcat ("i=", _tmp3_, " \nm=", _tmp5_, " \n", "$", NULL);
++	_g_free0 (_result_);
++	_result_ = _tmp6_;
++	_g_free0 (_tmp3_);
++	_tmp7_ = _result_;
++	_vala_assert (g_strcmp0 (_tmp7_, "i=42 \nm=foo \n$") == 0, "result == \"i=42 \\nm=foo \\n$\"");
++	_g_free0 (_result_);
++}
++
++int
++main (int argc,
++      char ** argv)
++{
++	_vala_main ();
++	return 0;
++}
++
 diff --git a/tests/parser/verbatim-template.vala b/tests/parser/verbatim-template.vala
 new file mode 100644
-index 000000000..da64b642d
+index 000000000..4a3db1fa5
 --- /dev/null
 +++ b/tests/parser/verbatim-template.vala
 @@ -0,0 +1,15 @@
@@ -539,8 +470,8 @@ index 000000000..da64b642d
 +	int i = 42;
 +	result = @"""i=$i 
 +m=$(m ()) 
-+$""";
-+	assert (result == "i=42 \nm=foo \n$""");
++$$""";
++	assert (result == "i=42 \nm=foo \n$");
 +}
 diff --git a/tests/scanner/string-template.c-expected b/tests/scanner/string-template.c-expected
 new file mode 100644
@@ -683,68 +614,160 @@ index 000000000..6f7b0d214
 +}
 +
 diff --git a/tests/scanner/string-verbatim-template.vala b/tests/scanner/string-verbatim-template.vala
-index c615de9c6..32ff85755 100644
---- a/tests/scanner/string-verbatim-template.vala
+new file mode 100644
+index 000000000..32ff85755
+--- /dev/null
 +++ b/tests/scanner/string-verbatim-template.vala
-@@ -1,10 +1,8 @@
- void main () {
--    int a = 1;
--    var s1 = @"""a is $a, '\' is '\'""";
--    var s2 = @"a is $a, '\\' is '\\'";
--    assert(s1 == s2);
+@@ -0,0 +1,8 @@
++void main () {
 +	var foo = "Hello";
 +	var bar = "world";
- 
--    var s3 = @""""Hello, World! "a" == $a"""";
--    var s4 = @"\"Hello, World! \"a\" == $a\"";
--    assert(s3 == s4);
++
 +	var manam = @"""$foo 
 +$bar!""";
 +	var minim = @"""""";
- }
--- 
-2.38.1.windows.1
-
-
-From d746f44de31e01276e919dde197920ccb2bf4847 Mon Sep 17 00:00:00 2001
-From: Rico Tzschichholz <ricotz@ubuntu.com>
-Date: Sun, 30 Oct 2022 10:31:55 +0100
-Subject: [PATCH 10/11] fix typo
-
----
- tests/parser/verbatim-template.vala | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/tests/parser/verbatim-template.vala b/tests/parser/verbatim-template.vala
-index da64b642d..400418025 100644
---- a/tests/parser/verbatim-template.vala
-+++ b/tests/parser/verbatim-template.vala
-@@ -10,6 +10,6 @@ void main () {
- 	int i = 42;
- 	result = @"""i=$i 
- m=$(m ()) 
--$""";
-+$$""";
- 	assert (result == "i=42 \nm=foo \n$""");
- }
--- 
-2.38.1.windows.1
-
-
-From c0746fbac51f7d437c7a9ada1ebadbdcf5d590b5 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
-Date: Sun, 30 Oct 2022 18:08:21 +0800
-Subject: [PATCH 11/11] fix comma
-
----
- vala/valascanner.vala | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/vala/valascanner.vala b/vala/valascanner.vala
-index c545115dc..58f6a5f57 100644
---- a/vala/valascanner.vala
-+++ b/vala/valascanner.vala
-@@ -927,7 +927,7 @@ public class Vala.Scanner {
++}
+diff --git a/vala/valagenieparser.vala b/vala/valagenieparser.vala
+index 7c7c48309..9781cd339 100644
+--- a/vala/valagenieparser.vala
++++ b/vala/valagenieparser.vala
+@@ -394,6 +394,11 @@ public class Vala.Genie.Parser : CodeVisitor {
+ 			string raw_string = get_last_string ();
+ 			string escaped_string = raw_string.substring (3, raw_string.length - 6).escape ("");
+ 			return new StringLiteral ("\"%s\"".printf (escaped_string), get_src (begin));
++		case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
++			next ();
++			string raw_string = get_last_string ();
++			string escaped_string = raw_string.escape ("");
++			return new StringLiteral ("\"%s\"".printf (escaped_string), get_src (begin));
+ 		case TokenType.NULL:
+ 			next ();
+ 			return new NullLiteral (get_src (begin));
+@@ -701,6 +706,7 @@ public class Vala.Genie.Parser : CodeVisitor {
+ 		case TokenType.STRING_LITERAL:
+ 		case TokenType.TEMPLATE_STRING_LITERAL:
+ 		case TokenType.VERBATIM_STRING_LITERAL:
++		case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
+ 		case TokenType.NULL:
+ 			expr = parse_literal ();
+ 			break;
+@@ -1285,6 +1291,7 @@ public class Vala.Genie.Parser : CodeVisitor {
+ 					case TokenType.STRING_LITERAL:
+ 					case TokenType.TEMPLATE_STRING_LITERAL:
+ 					case TokenType.VERBATIM_STRING_LITERAL:
++					case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
+ 					case TokenType.NULL:
+ 					case TokenType.SELF:
+ 					case TokenType.SUPER:
+diff --git a/vala/valageniescanner.vala b/vala/valageniescanner.vala
+index ef54ae7d3..286992206 100644
+--- a/vala/valageniescanner.vala
++++ b/vala/valageniescanner.vala
+@@ -67,7 +67,8 @@ public class Vala.Genie.Scanner {
+ 		BRACKET,
+ 		REGEX_LITERAL,
+ 		TEMPLATE,
+-		TEMPLATE_PART
++		TEMPLATE_PART,
++		VERBATIM_TEMPLATE
+ 	}
+ 
+ 	public Scanner (SourceFile source_file) {
+@@ -97,6 +98,10 @@ public class Vala.Genie.Scanner {
+ 		return (state_stack.length > 0 && state_stack[state_stack.length - 1] == State.TEMPLATE);
+ 	}
+ 
++	bool in_verbatim_template () {
++		return (state_stack.length > 0 && state_stack[state_stack.length - 1] == State.VERBATIM_TEMPLATE);
++	}
++
+ 	bool in_template_part () {
+ 		return (state_stack.length > 0 && state_stack[state_stack.length - 1] == State.TEMPLATE_PART);
+ 	}
+@@ -695,6 +700,7 @@ public class Vala.Genie.Scanner {
+ 
+ 
+ 	public TokenType read_template_token (out SourceLocation token_begin, out SourceLocation token_end) {
++		bool is_verbatim = in_verbatim_template ();
+ 		TokenType type;
+ 		char* begin = current;
+ 		token_begin = SourceLocation (begin, line, column);
+@@ -706,9 +712,22 @@ public class Vala.Genie.Scanner {
+ 		} else {
+ 			switch (current[0]) {
+ 			case '"':
+-				type = TokenType.CLOSE_TEMPLATE;
+-				current++;
+-				state_stack.length--;
++				if (is_verbatim) {
++					if (current < end -2 && current[1] == '"' && current[2] == '"' && current[3] != '"') {
++						type = TokenType.CLOSE_TEMPLATE;
++						current += 3;
++						state_stack.length--;
++					} else {
++						type = TokenType.VERBATIM_TEMPLATE_STRING_LITERAL;
++						current++;
++						token_length_in_chars++;
++						state_stack += State.TEMPLATE_PART;
++					}
++				} else {
++					type = TokenType.CLOSE_TEMPLATE;
++					current++;
++					state_stack.length--;
++				}
+ 				break;
+ 			case '$':
+ 				token_begin.pos++; // $ is not part of following token
+@@ -727,7 +746,7 @@ public class Vala.Genie.Scanner {
+ 					state_stack += State.PARENS;
+ 					return read_token (out token_begin, out token_end);
+ 				} else if (current[0] == '$') {
+-					type = TokenType.TEMPLATE_STRING_LITERAL;
++					type = is_verbatim ? TokenType.VERBATIM_TEMPLATE_STRING_LITERAL : TokenType.TEMPLATE_STRING_LITERAL;
+ 					current++;
+ 					state_stack += State.TEMPLATE_PART;
+ 				} else {
+@@ -736,10 +755,10 @@ public class Vala.Genie.Scanner {
+ 				}
+ 				break;
+ 			default:
+-				type = TokenType.TEMPLATE_STRING_LITERAL;
++				type = is_verbatim ? TokenType.VERBATIM_TEMPLATE_STRING_LITERAL : TokenType.TEMPLATE_STRING_LITERAL;
+ 				token_length_in_chars = 0;
+ 				while (current < end && current[0] != '"' && current[0] != '$') {
+-					if (current[0] == '\\') {
++					if (current[0] == '\\' && !is_verbatim) {
+ 						current++;
+ 						token_length_in_chars++;
+ 						if (current >= end) {
+@@ -842,7 +861,7 @@ public class Vala.Genie.Scanner {
+ 			return TokenType.EOF;
+ 		}
+ 
+-		if (in_template ()) {
++		if (in_template () || in_verbatim_template ()) {
+ 			return read_template_token (out token_begin, out token_end);
+ 		} else if (in_template_part ()) {
+ 			state_stack.length--;
+@@ -960,9 +979,15 @@ public class Vala.Genie.Scanner {
+ 			type = get_identifier_or_keyword (begin, len);
+ 		} else if (current[0] == '@') {
+ 			if (current < end - 1 && current[1] == '"') {
++				current += 1;
++				if (current < end - 5 && current[1] == '"' && current[2] == '"') {
++					current += 3;
++					state_stack += State.VERBATIM_TEMPLATE;
++				} else {
++					current += 1;
++					state_stack += State.TEMPLATE;
++				}
+ 				type = TokenType.OPEN_TEMPLATE;
+-				current += 2;
+-				state_stack += State.TEMPLATE;
+ 			} else {
+ 				token_begin.pos++; // @ is not part of the identifier
+ 				current++;
+@@ -1053,7 +1078,7 @@ public class Vala.Genie.Scanner {
  				if (state_stack.length > 0) {
  					state_stack.length--;
  				}
@@ -753,6 +776,238 @@ index c545115dc..58f6a5f57 100644
  					type = TokenType.COMMA;
  				}
  				break;
+diff --git a/vala/valagenietokentype.vala b/vala/valagenietokentype.vala
+index 08bef53fd..fc46724b4 100644
+--- a/vala/valagenietokentype.vala
++++ b/vala/valagenietokentype.vala
+@@ -163,6 +163,7 @@ public enum Vala.Genie.TokenType {
+ 	USES,
+ 	VAR,
+ 	VERBATIM_STRING_LITERAL,
++	VERBATIM_TEMPLATE_STRING_LITERAL,
+ 	VIRTUAL,
+ 	VOID,
+ 	VOLATILE,
+@@ -311,6 +312,7 @@ public enum Vala.Genie.TokenType {
+ 		case USES: return "`uses'";
+ 		case VAR: return "`var'";
+ 		case VERBATIM_STRING_LITERAL: return "verbatim string literal";
++		case VERBATIM_TEMPLATE_STRING_LITERAL: return "verbatim template string literal";
+ 		case VIRTUAL: return "`virtual'";
+ 		case VOID: return "`void'";
+ 		case VOLATILE: return "`volatile'";
+diff --git a/vala/valaparser.vala b/vala/valaparser.vala
+index f703e9c86..23b1e7db4 100644
+--- a/vala/valaparser.vala
++++ b/vala/valaparser.vala
+@@ -384,6 +384,11 @@ public class Vala.Parser : CodeVisitor {
+ 			string raw_string = get_last_string ();
+ 			string escaped_string = raw_string.substring (3, raw_string.length - 6).escape ("");
+ 			return new StringLiteral ("\"%s\"".printf (escaped_string), get_src (begin));
++		case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
++			next ();
++			string raw_string = get_last_string ();
++			string escaped_string = raw_string.escape ("");
++			return new StringLiteral ("\"%s\"".printf (escaped_string), get_src (begin));
+ 		case TokenType.NULL:
+ 			next ();
+ 			return new NullLiteral (get_src (begin));
+@@ -719,6 +724,7 @@ public class Vala.Parser : CodeVisitor {
+ 		case TokenType.REGEX_LITERAL:
+ 		case TokenType.TEMPLATE_STRING_LITERAL:
+ 		case TokenType.VERBATIM_STRING_LITERAL:
++		case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
+ 		case TokenType.NULL:
+ 			expr = parse_literal ();
+ 			break;
+@@ -1269,6 +1275,7 @@ public class Vala.Parser : CodeVisitor {
+ 						case TokenType.STRING_LITERAL:
+ 						case TokenType.TEMPLATE_STRING_LITERAL:
+ 						case TokenType.VERBATIM_STRING_LITERAL:
++						case TokenType.VERBATIM_TEMPLATE_STRING_LITERAL:
+ 						case TokenType.REGEX_LITERAL:
+ 						case TokenType.NULL:
+ 						case TokenType.THIS:
+diff --git a/vala/valascanner.vala b/vala/valascanner.vala
+index daeb97feb..13a4698b6 100644
+--- a/vala/valascanner.vala
++++ b/vala/valascanner.vala
+@@ -54,7 +54,8 @@ public class Vala.Scanner {
+ 		BRACKET,
+ 		TEMPLATE,
+ 		TEMPLATE_PART,
+-		REGEX_LITERAL
++		REGEX_LITERAL,
++		VERBATIM_TEMPLATE
+ 	}
+ 
+ 	public Scanner (SourceFile source_file) {
+@@ -82,6 +83,10 @@ public class Vala.Scanner {
+ 		return (state_stack.length > 0 && state_stack[state_stack.length - 1] == State.TEMPLATE);
+ 	}
+ 
++	bool in_verbatim_template () {
++		return (state_stack.length > 0 && state_stack[state_stack.length - 1] == State.VERBATIM_TEMPLATE);
++	}
++
+ 	bool in_template_part () {
+ 		return (state_stack.length > 0 && state_stack[state_stack.length - 1] == State.TEMPLATE_PART);
+ 	}
+@@ -686,6 +691,7 @@ public class Vala.Scanner {
+ 	}
+ 
+ 	public TokenType read_template_token (out SourceLocation token_begin, out SourceLocation token_end) {
++		bool is_verbatim = in_verbatim_template ();
+ 		TokenType type;
+ 		char* begin = current;
+ 		token_begin = SourceLocation (begin, line, column);
+@@ -697,9 +703,22 @@ public class Vala.Scanner {
+ 		} else {
+ 			switch (current[0]) {
+ 			case '"':
+-				type = TokenType.CLOSE_TEMPLATE;
+-				current++;
+-				state_stack.length--;
++				if (is_verbatim) {
++					if (current < end -2 && current[1] == '"' && current[2] == '"' && current[3] != '"') {
++						type = TokenType.CLOSE_TEMPLATE;
++						current += 3;
++						state_stack.length--;
++					} else {
++						type = TokenType.VERBATIM_TEMPLATE_STRING_LITERAL;
++						current++;
++						token_length_in_chars++;
++						state_stack += State.TEMPLATE_PART;
++					}
++				} else {
++					type = TokenType.CLOSE_TEMPLATE;
++					current++;
++					state_stack.length--;
++				}
+ 				break;
+ 			case '$':
+ 				token_begin.pos++; // $ is not part of following token
+@@ -718,7 +737,7 @@ public class Vala.Scanner {
+ 					state_stack += State.PARENS;
+ 					return read_token (out token_begin, out token_end);
+ 				} else if (current[0] == '$') {
+-					type = TokenType.TEMPLATE_STRING_LITERAL;
++					type = is_verbatim ? TokenType.VERBATIM_TEMPLATE_STRING_LITERAL : TokenType.TEMPLATE_STRING_LITERAL;
+ 					current++;
+ 					state_stack += State.TEMPLATE_PART;
+ 				} else {
+@@ -727,10 +746,10 @@ public class Vala.Scanner {
+ 				}
+ 				break;
+ 			default:
+-				type = TokenType.TEMPLATE_STRING_LITERAL;
++				type = is_verbatim ? TokenType.VERBATIM_TEMPLATE_STRING_LITERAL : TokenType.TEMPLATE_STRING_LITERAL;
+ 				token_length_in_chars = 0;
+ 				while (current < end && current[0] != '"' && current[0] != '$') {
+-					if (current[0] == '\\') {
++					if (current[0] == '\\' && !is_verbatim) {
+ 						current++;
+ 						token_length_in_chars++;
+ 						if (current >= end) {
+@@ -829,7 +848,7 @@ public class Vala.Scanner {
+ 	}
+ 
+ 	public TokenType read_token (out SourceLocation token_begin, out SourceLocation token_end) {
+-		if (in_template ()) {
++		if (in_template () || in_verbatim_template ()) {
+ 			return read_template_token (out token_begin, out token_end);
+ 		} else if (in_template_part ()) {
+ 			state_stack.length--;
+@@ -861,9 +880,15 @@ public class Vala.Scanner {
+ 			type = get_identifier_or_keyword (begin, len);
+ 		} else if (current[0] == '@') {
+ 			if (current < end - 1 && current[1] == '"') {
++				current += 1;
++				if (current < end - 5 && current[1] == '"' && current[2] == '"') {
++					current += 3;
++					state_stack += State.VERBATIM_TEMPLATE;
++				} else {
++					current += 1;
++					state_stack += State.TEMPLATE;
++				}
+ 				type = TokenType.OPEN_TEMPLATE;
+-				current += 2;
+-				state_stack += State.TEMPLATE;
+ 			} else {
+ 				token_begin.pos++; // @ is not part of the identifier
+ 				current++;
+@@ -901,7 +926,7 @@ public class Vala.Scanner {
+ 				if (state_stack.length > 0) {
+ 					state_stack.length--;
+ 				}
+-				if (in_template ()) {
++				if (in_template () || in_verbatim_template ()) {
+ 					type = TokenType.COMMA;
+ 				}
+ 				break;
+diff --git a/vala/valatokentype.vala b/vala/valatokentype.vala
+index 2c64ec1b0..6097beaff 100644
+--- a/vala/valatokentype.vala
++++ b/vala/valatokentype.vala
+@@ -149,6 +149,7 @@ public enum Vala.TokenType {
+ 	USING,
+ 	VAR,
+ 	VERBATIM_STRING_LITERAL,
++	VERBATIM_TEMPLATE_STRING_LITERAL,
+ 	VIRTUAL,
+ 	VOID,
+ 	VOLATILE,
+@@ -284,6 +285,7 @@ public enum Vala.TokenType {
+ 		case USING: return "`using'";
+ 		case VAR: return "`var'";
+ 		case VERBATIM_STRING_LITERAL: return "verbatim string literal";
++		case VERBATIM_TEMPLATE_STRING_LITERAL: return "verbatim template string literal";
+ 		case VIRTUAL: return "`virtual'";
+ 		case VOID: return "`void'";
+ 		case VOLATILE: return "`volatile'";
+-- 
+2.38.1.windows.1
+
+
+From 8da6b3dfdbcdf60f9e1dddb685cfc93046ec0ddd Mon Sep 17 00:00:00 2001
+From: wszqkzqk <wszqkzqk@qq.com>
+Date: Tue, 1 Nov 2022 22:39:57 +0800
+Subject: [PATCH 2/2] Vala: warn when variable confused with numbers
+
+---
+ vala/valascanner.vala | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/vala/valascanner.vala b/vala/valascanner.vala
+index 13a4698b6..431947703 100644
+--- a/vala/valascanner.vala
++++ b/vala/valascanner.vala
+@@ -684,6 +684,7 @@ public class Vala.Scanner {
+ 					current++;
+ 				}
+ 				type = TokenType.IDENTIFIER;
++
+ 			}
+ 		}
+ 
+@@ -901,6 +902,17 @@ public class Vala.Scanner {
+ 			}
+ 		} else if (current[0].isdigit ()) {
+ 			type = read_number ();
++
++			// Warning when variable names confused with numbers
++			// Remove this when !263 (https://gitlab.gnome.org/GNOME/vala/-/merge_requests/263) is merged
++			if (type == TokenType.IDENTIFIER) {
++				string ident_name = ((string) begin).substring (0, (long) (current - begin));
++				string[] components = ident_name.split ("_");
++				string actual_name = string.joinv("", components);
++				if (double.try_parse(actual_name) || int64.try_parse(actual_name) || uint64.try_parse(actual_name)) {
++					Report.warning (get_source_reference (token_length_in_chars), "Variable names that are confused with numbers will be dropped. Please modify them or make them start with \"@\".");
++				}
++			}
+ 		} else {
+ 			switch (current[0]) {
+ 			case '{':
 -- 
 2.38.1.windows.1
 
