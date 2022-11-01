@@ -26,7 +26,7 @@ source=(https://download.gnome.org/sources/${_realname}/${pkgver%.*}/${_realname
 sha256sums=('e1066221bf7b89cb1fa7327a3888645cb33b604de3bf45aa81132fd040b699bf'
             '266756afe0fa2871800e2d4cbf5db5c9e9e68abd52f7f694f077c7e425bc2772'
             'b88c5b09a0d5c06a5636daad65832e1d1581dd8e4d521ade0d4d6c2a473c07b9'
-            '762a7839f56355a56ed0bc8b81307c1cd57056ec9343d619534d36302da84b01')
+            'e8f3936326d8984f3429b1ead4e34715698dae1b11d993df9baf67b611d24bfa')
 
 prepare() {
   cd "${srcdir}"/${_realname}-${pkgver}
@@ -34,7 +34,7 @@ prepare() {
   # https://gitlab.gnome.org/GNOME/vala/-/issues/1302
   patch -p1 -i "${srcdir}/0001-relocate-plugin-path.patch"
 
-  #patch -p1 -i "${srcdir}/0002-squash-wszqkzqk.patch"
+  patch -p1 -i "${srcdir}/0002-squash-wszqkzqk.patch"
   patch -p1 -i "${srcdir}/0003-squash-wszqkzqk.patch"
 
   autoreconf -ivf

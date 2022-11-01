@@ -969,45 +969,34 @@ index 2c64ec1b0..6097beaff 100644
 2.38.1.windows.1
 
 
-From 8da6b3dfdbcdf60f9e1dddb685cfc93046ec0ddd Mon Sep 17 00:00:00 2001
-From: wszqkzqk <wszqkzqk@qq.com>
-Date: Tue, 1 Nov 2022 22:39:57 +0800
-Subject: [PATCH 2/2] Vala: warn when variable confused with numbers
+From 94c308e2f81dfed4a0722dcb9efff06f3936e973 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
+Date: Mon, 31 Oct 2022 00:50:46 +0800
+Subject: [PATCH 2/2] Adapt Unix filenames with `\`
 
 ---
- vala/valascanner.vala | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ ccode/valaccodelinedirective.vala | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/vala/valascanner.vala b/vala/valascanner.vala
-index 13a4698b6..431947703 100644
---- a/vala/valascanner.vala
-+++ b/vala/valascanner.vala
-@@ -684,6 +684,7 @@ public class Vala.Scanner {
- 					current++;
- 				}
- 				type = TokenType.IDENTIFIER;
-+
- 			}
- 		}
+diff --git a/ccode/valaccodelinedirective.vala b/ccode/valaccodelinedirective.vala
+index c5e61114b..6b121ce43 100644
+--- a/ccode/valaccodelinedirective.vala
++++ b/ccode/valaccodelinedirective.vala
+@@ -37,7 +37,13 @@ public class Vala.CCodeLineDirective : CCodeNode {
+ 	public int line_number { get; set; }
  
-@@ -901,6 +902,17 @@ public class Vala.Scanner {
- 			}
- 		} else if (current[0].isdigit ()) {
- 			type = read_number ();
-+
-+			// Warning when variable names confused with numbers
-+			// Remove this when !263 (https://gitlab.gnome.org/GNOME/vala/-/merge_requests/263) is merged
-+			if (type == TokenType.IDENTIFIER) {
-+				string ident_name = ((string) begin).substring (0, (long) (current - begin));
-+				string[] components = ident_name.split ("_");
-+				string actual_name = string.joinv("", components);
-+				if (double.try_parse(actual_name) || int64.try_parse(actual_name) || uint64.try_parse(actual_name)) {
-+					Report.warning (get_source_reference (token_length_in_chars), "Variable names that are confused with numbers will be dropped. Please modify them or make them start with \"@\".");
-+				}
-+			}
- 		} else {
- 			switch (current[0]) {
- 			case '{':
+ 	public CCodeLineDirective (string _filename, int _line) {
+-		filename = _filename;
++		if (Path.DIR_SEPARATOR == '/') {
++			string[] components = _filename.split ("""\""");
++			filename = string.joinv ("""\\""", components);
++		}
++		else {
++			filename = _filename;
++		}
+ 		line_number = _line;
+ 	}
+ 
 -- 
 2.38.1.windows.1
 
