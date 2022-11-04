@@ -21,7 +21,7 @@ source=("https://download.gnome.org/sources/${_realname}/${pkgver%.*}/${_realnam
         0002-wszqkzqk-libgee.patch)
 sha256sums=('1bf834f5e10d60cc6124d74ed3c1dd38da646787fbf7872220b8b4068e476d4d'
             'c581568b4538666d6f35b3b159184c244b58ffcd8cf6fc5f7809842478f2d01d'
-            '867c81e70eeddbc3d28ac46cb6e8cbe622e27010078782ebebaaa6ee45d96e1d')
+            '086632e7d6ae1e4508d0ea0df0dc40b84fba81c2c583c4661bb846e330f2e986')
 
 prepare() {
   cd "${srcdir}"/${_realname}-${pkgver}
