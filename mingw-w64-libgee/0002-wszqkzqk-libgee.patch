@@ -1,7 +1,7 @@
 From 00e3fdce7c38c28e8ecffe569b23edd874a07b10 Mon Sep 17 00:00:00 2001
 From: wszqkzqk <wszqkzqk@qq.com>
 Date: Fri, 4 Nov 2022 15:41:40 +0800
-Subject: [PATCH 1/7] add some functions close #44
+Subject: [PATCH 1/8] add some functions close #44
 
 ---
  gee/functions.vala | 37 +++++++++++++++++++++++++++++++++++++
@@ -76,7 +76,7 @@ index c391c5f..1058ff0 100644
 From 079c2f53e5063af35b0855ec169f3dad6f0d26a2 Mon Sep 17 00:00:00 2001
 From: wszqkzqk <wszqkzqk@qq.com>
 Date: Fri, 4 Nov 2022 15:50:13 +0800
-Subject: [PATCH 2/7] Adaptation for older versions of Vala
+Subject: [PATCH 2/8] Adaptation for older versions of Vala
 
 ---
  gee/functions.vala | 12 ++++--------
@@ -115,7 +115,7 @@ index 1058ff0..8d4978d 100644
 From 36cb9cae85042668c93ec6e0b2a662d665f966f9 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Fri, 4 Nov 2022 17:59:05 +0800
-Subject: [PATCH 3/7] minor optimization
+Subject: [PATCH 3/8] minor optimization
 
 ---
  gee/functions.vala | 12 ++++--------
@@ -166,7 +166,7 @@ index 8d4978d..798f609 100644
 From bca1f9472f7f15b8e06c6c3b7de12a108735047e Mon Sep 17 00:00:00 2001
 From: wszqkzqk <wszqkzqk@qq.com>
 Date: Fri, 4 Nov 2022 21:41:00 +0800
-Subject: [PATCH 4/7] some fix
+Subject: [PATCH 4/8] some fix
 
 ---
  gee/functions.vala | 24 ++++++++++++++++--------
@@ -242,7 +242,7 @@ index 798f609..6301102 100644
 From 5a3d1b9457d7d4a1a725b227e6bc9ffb24d1a40b Mon Sep 17 00:00:00 2001
 From: wszqkzqk <wszqkzqk@qq.com>
 Date: Fri, 4 Nov 2022 22:51:35 +0800
-Subject: [PATCH 5/7] Use pointer to fix
+Subject: [PATCH 5/8] Use pointer to fix
 
 ---
  gee/functions.vala | 54 ++++++++++++++++++++++++++++++++++++++--------
@@ -333,7 +333,7 @@ index 6301102..22fa479 100644
 From abd1b57c1c884ed5ee768d1358a38b8408bc17f2 Mon Sep 17 00:00:00 2001
 From: wszqkzqk <wszqkzqk@qq.com>
 Date: Sat, 5 Nov 2022 00:03:20 +0800
-Subject: [PATCH 6/7] use switch-case statement to simplify the code
+Subject: [PATCH 6/8] use switch-case statement to simplify the code
 
 ---
  gee/functions.vala | 157 ++++++++++++++++++++++++++-------------------
@@ -589,7 +589,7 @@ index 22fa479..d1e5731 100644
 From db988532d30ed4f3eed40887479cf0c939f48579 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=E6=98=9F=E5=A4=96=E4=B9=8B=E7=A5=9E?= <wszqkzqk@qq.com>
 Date: Sat, 5 Nov 2022 00:15:36 +0800
-Subject: [PATCH 7/7] set hash value for null
+Subject: [PATCH 7/8] set hash value for null
 
 ---
  gee/functions.vala | 15 ++++++++++++---
@@ -631,6 +631,224 @@ index d1e5731..7fdbb85 100644
  				};
  			default:
  				if (t.is_a (typeof (Hashable))) {
+-- 
+2.38.1.windows.1
+
+
+From ddba4d0544d5f4602d35928ba4f6906de333e358 Mon Sep 17 00:00:00 2001
+From: wszqkzqk <wszqkzqk@qq.com>
+Date: Sat, 5 Nov 2022 17:05:17 +0800
+Subject: [PATCH 8/8] fix for types shorter than 64 bits
+
+---
+ gee/functions.vala | 131 +++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 120 insertions(+), 11 deletions(-)
+
+diff --git a/gee/functions.vala b/gee/functions.vala
+index 7fdbb85..ca35c1c 100644
+--- a/gee/functions.vala
++++ b/gee/functions.vala
+@@ -59,18 +59,29 @@ namespace Gee {
+ 				};
+ 			case Type.CHAR:
+ 			case Type.UCHAR:
++				return (a, b) => {
++					// Equality of binary content expressed in uchar is equivalent to numerical equality
++					return *(uchar*) a == *(uchar*) b;
++				};
+ 			case Type.INT:
+ 			case Type.UINT:
++			case Type.FLOAT:
++				return (a, b) => {
++					// Equality of binary content expressed in uint is equivalent to numerical equality
++					return *(uint*) a == *(uint*) b;
++				};
+ 			case Type.INT64:
+ 			case Type.UINT64:
+-			case Type.LONG:
+-			case Type.ULONG:
+ 			case Type.DOUBLE:
+-			case Type.FLOAT:
+ 				return (a, b) => {
+ 					// Equality of binary content expressed in uint64 is equivalent to numerical equality
+ 					return *(uint64*) a == *(uint64*) b;
+ 				};
++			case Type.LONG:
++			case Type.ULONG:
++				return (a, b) => {
++					return *(ulong*) a == *(ulong*) b;
++				};
+ 			default:
+ 				if (t.is_a (typeof (Hashable))) {
+ 					return (a, b) => {
+@@ -107,43 +118,69 @@ namespace Gee {
+ 			case Type.STRING:
+ 				return (a) => {
+ 					if (a == null)
+-						return (uint)0xdeadbeef;
++						return (uint) 0xdeadbeef;
+ 					else
+ 						return str_hash ((string) a);
+ 				};
+ 			case Type.CHAR:
+ 			case Type.UCHAR:
++				return (a) => {
++					if (a == null)
++						return (uint) 0xdeadbeef;
++					else
++						return int_hash ((int) *(char*) a);
++				};
+ 			case Type.INT:
+ 			case Type.UINT:
+ 				return (a) => {
+ 					if (a == null)
+-						return (uint)0xdeadbeef;
++						return (uint) 0xdeadbeef;
+ 					else
+ 						return int_hash (*(int*) a);
+ 				};
+ 			case Type.INT64:
+ 			case Type.UINT64:
+-			case Type.LONG:
+-			case Type.ULONG:
+ 				return (a) => {
+ 					if (a == null)
+-						return (uint)0xdeadbeef;
++						return (uint) 0xdeadbeef;
+ 					else
+ 						return int64_hash (*(int64*) a);
+ 				};
+ 			case Type.DOUBLE:
+-			case Type.FLOAT:
+ 				return (a) => {
+ 					if (a == null)
+-						return (uint)0xdeadbeef;
++						return (uint) 0xdeadbeef;
+ 					else
+ 						return double_hash (*(double*) a);
+ 				};
++			case Type.FLOAT:
++				return (a) => {
++					if (a == null)
++						return (uint) 0xdeadbeef;
++					else
++						return double_hash ((double) *(float*) a);
++				};
++			case Type.LONG:
++			case Type.ULONG:
++				if (ulong.MAX > uint32.MAX)
++					return (a) => {
++						if (a == null)
++							return (uint) 0xdeadbeef;
++						else
++							return int64_hash (*(int64*) a);
++					};
++				else
++					return (a) => {
++						if (a == null)
++							return (uint) 0xdeadbeef;
++						else
++							return int_hash (*(int*) a);
++					};
+ 			default:
+ 				if (t.is_a (typeof (Hashable))) {
+ 					return (a) => {
+ 						if (a == null)
+-							return (uint)0xdeadbeef;
++							return (uint) 0xdeadbeef;
+ 						else
+ 							return ((Hashable) a).hash();
+ 					};
+@@ -174,8 +211,44 @@ namespace Gee {
+ 						return strcmp((string) a, (string) b);
+ 				};
+ 			case Type.CHAR:
++				return (a, b) => {
++					if (a == null)
++						return b == null ? 0 : -1;
++					else if (b == null)
++						return 1;
++					else if (*(char*) a > *(char*) b)
++						return 1;
++					else if (*(char*) a == *(char*) b)
++						return 0;
++					else
++						return -1;
++				};
+ 			case Type.INT:
++				return (a, b) => {
++					if (a == null)
++						return b == null ? 0 : -1;
++					else if (b == null)
++						return 1;
++					else if (*(int*) a > *(int*) b)
++						return 1;
++					else if (*(int*) a == *(int*) b)
++						return 0;
++					else
++						return -1;
++				};
+ 			case Type.LONG:
++				return (a, b) => {
++					if (a == null)
++						return b == null ? 0 : -1;
++					else if (b == null)
++						return 1;
++					else if (*(long*) a > *(long*) b)
++						return 1;
++					else if (*(long*) a == *(long*) b)
++						return 0;
++					else
++						return -1;
++				};
+ 			case Type.INT64:
+ 				return (a, b) => {
+ 					if (a == null)
+@@ -190,8 +263,44 @@ namespace Gee {
+ 						return -1;
+ 				};
+ 			case Type.UCHAR:
++				return (a, b) => {
++					if (a == null)
++						return b == null ? 0 : -1;
++					else if (b == null)
++						return 1;
++					else if (*(uchar*) a > *(uchar*) b)
++						return 1;
++					else if (*(uchar*) a == *(uchar*) b)
++						return 0;
++					else
++						return -1;
++				};
+ 			case Type.UINT:
++				return (a, b) => {
++					if (a == null)
++						return b == null ? 0 : -1;
++					else if (b == null)
++						return 1;
++					else if (*(uint*) a > *(uint*) b)
++						return 1;
++					else if (*(uint*) a == *(uint*) b)
++						return 0;
++					else
++						return -1;
++				};
+ 			case Type.ULONG:
++				return (a, b) => {
++					if (a == null)
++						return b == null ? 0 : -1;
++					else if (b == null)
++						return 1;
++					else if (*(ulong*) a > *(ulong*) b)
++						return 1;
++					else if (*(ulong*) a == *(ulong*) b)
++						return 0;
++					else
++						return -1;
++				};
+ 			case Type.UINT64:
+ 				return (a, b) => {
+ 					if (a == null)
 -- 
 2.38.1.windows.1
 
