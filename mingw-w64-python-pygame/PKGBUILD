@@ -35,7 +35,7 @@ options=('strip')
 source=(https://github.com/pygame/pygame/archive/refs/tags/${pkgver}.tar.gz
         001-setup-fixes.patch
         002-camera-extension-fixes.patch)
-sha256sums=('1d8a55b5a769eb9521b9d346688d4a060dca3e4497300efc78fb4021bc370199'
+sha256sums=('3bf0a4691156e07fd3a24e4de62ddf57a848f6e2546c4facd6d1ecf5be78c6fd'
             'bbc384971b97e86b8f5a383d48da31b787f5029da0171b7dc2f85c34f4b8d44b'
             'd5269af882bb4b61ff8ca73363b0ed925df3c16347754b49277a9b9af961992c')
 
