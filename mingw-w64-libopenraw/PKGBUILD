@@ -1,0 +1,38 @@
+# Contributor: wszqkzqk <wszqkzqk@qq.com>
+
+_realname=libopenraw
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.3.7
+pkgrel=1
+pkgdesc="Library for decoding RAW files (mingw-w64)"
+arch=('any')
+mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clang32' 'clangarm64')
+url='https://libopenraw.freedesktop.org/'
+license=('LGPL')
+depends=("${MINGW_PACKAGE_PREFIX}-gdk-pixbuf2")
+makedepends=("${MINGW_PACKAGE_PREFIX}-boost"
+             "${MINGW_PACKAGE_PREFIX}-libxml2"
+             "${MINGW_PACKAGE_PREFIX}-rust")
+source=("https://libopenraw.freedesktop.org/download/${_realname}-${pkgver}.tar.bz2")
+sha256sums=('5515b2610361ef34580b6b976635119f6dedb4f0a79d54662fa5fe6186a45ed5')
+
+prepare() {
+# Fix libopenraw dependency in -gnome pc file
+  sed -e 's|libopenraw-0.1|libopenraw-0.3|' -i $_realname-$pkgver/gnome/libopenraw-gnome-0.3.pc.in
+}
+
+build() {
+  cd ${_realname}-${pkgver}
+
+  ./configure --build=${MINGW_CHOST} \
+    --host=${MINGW_CHOST} \
+    --target=${MINGW_CHOST} \
+    --prefix=${MINGW_PREFIX}
+  make
+}
+
+package() {
+  cd ${_realname}-${pkgver}
+  make install DESTDIR="${pkgdir}"
+}
