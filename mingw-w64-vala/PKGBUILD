@@ -1,0 +1,63 @@
+# Maintainer: Alexey Pavlov <alexpux@gmail.com>
+
+_realname=vala
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=0.56.18
+pkgrel=0
+pkgdesc="Compiler for the GObject type system (mingw-w64)"
+arch=('any')
+mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clangarm64')
+url="https://wiki.gnome.org/Projects/Vala"
+msys2_references=(
+  "cpe: cpe:/a:gnome:vala"
+)
+license=("LGPL")
+makedepends=("help2man"
+             "${MINGW_PACKAGE_PREFIX}-libxslt"
+             "${MINGW_PACKAGE_PREFIX}-autotools"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-gobject-introspection"
+             "${MINGW_PACKAGE_PREFIX}-vala")
+depends=("${MINGW_PACKAGE_PREFIX}-glib2"
+         "${MINGW_PACKAGE_PREFIX}-graphviz")
+source=(https://download.gnome.org/sources/${_realname}/${pkgver%.*}/${_realname}-${pkgver}.tar.xz
+        0001-relocate-plugin-path.patch
+        "debug.patch::https://gitlab.gnome.org/wszqkzqk/vala/-/commit/c9b126939a82e1c8d9add05f8fc9a5b2f9895708.diff")
+sha256sums=('f2affe7d40ab63db8e7b9ecc3f6bdc9c2fc7e3134c84ff2d795f482fe926a382'
+            '266756afe0fa2871800e2d4cbf5db5c9e9e68abd52f7f694f077c7e425bc2772'
+            'SKIP')
+msys2_repository_url="https://gitlab.gnome.org/GNOME/vala"
+
+prepare() {
+  cd "${srcdir}"/${_realname}-${pkgver}
+
+  # https://gitlab.gnome.org/GNOME/vala/-/issues/1302
+  patch -p1 -i "${srcdir}/0001-relocate-plugin-path.patch"
+  patch -p1 -i "${srcdir}/debug.patch"
+
+  autoreconf -ivf
+}
+
+build() {
+  mkdir -p "${srcdir}/build-${MSYSTEM}" && cd "${srcdir}/build-${MSYSTEM}"
+
+  ../${_realname}-${pkgver}/configure \
+    --prefix=${MINGW_PREFIX} \
+    --build=${MINGW_CHOST} \
+    --host=${MINGW_CHOST} \
+    --enable-shared
+
+  make
+}
+
+package() {
+  cd "${srcdir}/build-${MSYSTEM}"
+  make DESTDIR="${pkgdir}" install
+
+  # Move libvalaccodegen.dll to correct directory
+  mv "${pkgdir}${MINGW_PREFIX}"/lib/bin/libvalaccodegen.dll "${pkgdir}${MINGW_PREFIX}"/bin/libvalaccodegen.dll
+  rm -rf "${pkgdir}${MINGW_PREFIX}"/lib/bin
+
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/COPYING" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING"
+}
