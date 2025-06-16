@@ -1,0 +1,50 @@
+# Maintainer: wszqkzqk <wszqkzqk@qq.com>
+
+_realname=netease-cloud-music-gtk
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=2.5.0
+pkgrel=1
+pkgdesc="NetEase Cloud Music Player Based on Rust/GTK"
+arch=('any')
+mingw_arch=('mingw64' 'ucrt64' 'clang64' 'clangarm64')
+url="https://github.com/gmg137/netease-cloud-music-gtk"
+license=('spdx:GPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-libadwaita"
+         "${MINGW_PACKAGE_PREFIX}-gtk4"
+         "${MINGW_PACKAGE_PREFIX}-gst-plugins-base"
+         "${MINGW_PACKAGE_PREFIX}-gst-plugins-good"
+         "${MINGW_PACKAGE_PREFIX}-gst-plugins-bad-libs")
+optdepends=("${MINGW_PACKAGE_PREFIX}-gst-plugins-bad: extra media codecs"
+            "${MINGW_PACKAGE_PREFIX}-gst-plugins-ugly: extra media codecs")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-rust"
+             "${MINGW_PACKAGE_PREFIX}-meson"
+             "${MINGW_PACKAGE_PREFIX}-dbus-glib"
+             "${MINGW_PACKAGE_PREFIX}-desktop-file-utils")
+source=("https://github.com/gmg137/$_realname/archive/$pkgver.tar.gz")
+sha256sums=('a0bc68ae3851e66922d96ae3b76701fd1991d699093a5923ae31c96db4a5adc3')
+
+build() {
+    mkdir -p "${srcdir}/build-${MSYSTEM}" && cd "${srcdir}/build-${MSYSTEM}"
+
+    declare -a _extra_config
+    if check_option "debug" "n"; then
+        _extra_config+=("--buildtype=release")
+    else
+        _extra_config+=("--buildtype=debug")
+    fi
+
+    MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/meson.exe setup \
+        --prefix="${MINGW_PREFIX}" \
+        "${_extra_config[@]}" \
+        --wrap-mode=nodownload \
+        --default-library=both \
+        ../${_realname}-${pkgver}
+}
+
+package() {
+    cd "${srcdir}/build-${MSYSTEM}"
+    DESTDIR="${pkgdir}" ${MINGW_PREFIX}/bin/meson.exe install
+}
