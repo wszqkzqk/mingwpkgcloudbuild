@@ -1,0 +1,84 @@
+# Maintainer: wszqkzqk <wszqkzqk@qq.com>
+# Contributor: Bruno Pagani <archange@archlinux.org>
+# Contributor: Carlos Aznarán <caznaranl@uni.pe>
+# Contributor: Antonio Rojas <arojas@archlinux.org>
+# Contributor: Ronald van Haren <ronald.archlinux.org>
+# Contributor: Damir Perisa <damir.perisa@bluewin.ch>
+
+_realname=stellarium
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=25.1
+pkgrel=1
+pkgdesc="Software which renders realistic skies in real time with OpenGL"
+arch=(any)
+mingw_arch=('ucrt64' 'clang64' 'clangarm64')
+msys2_references=(
+  'archlinux: stellarium'
+)
+url="https://stellarium.org"
+license=(spdx:GPL-2.0-or-later)
+depends=(
+  ${MINGW_PACKAGE_PREFIX}-exiv2
+  ${MINGW_PACKAGE_PREFIX}-gcc-libs
+  ${MINGW_PACKAGE_PREFIX}-md4c
+  ${MINGW_PACKAGE_PREFIX}-nlopt
+  ${MINGW_PACKAGE_PREFIX}-qt6-base
+  ${MINGW_PACKAGE_PREFIX}-qt6-charts
+  ${MINGW_PACKAGE_PREFIX}-qt6-declarative
+  ${MINGW_PACKAGE_PREFIX}-qt6-multimedia
+  ${MINGW_PACKAGE_PREFIX}-qt6-positioning
+  ${MINGW_PACKAGE_PREFIX}-qt6-serialport
+  ${MINGW_PACKAGE_PREFIX}-qt6-svg
+  ${MINGW_PACKAGE_PREFIX}-qxlsx
+  ${MINGW_PACKAGE_PREFIX}-zlib
+)
+makedepends=(
+  git
+  ${MINGW_PACKAGE_PREFIX}-cmake
+  ${MINGW_PACKAGE_PREFIX}-cc
+  ${MINGW_PACKAGE_PREFIX}-eigen3
+  ${MINGW_PACKAGE_PREFIX}-glm
+  ${MINGW_PACKAGE_PREFIX}-mesa
+  ${MINGW_PACKAGE_PREFIX}-qt6-tools
+  ${MINGW_PACKAGE_PREFIX}-vulkan-headers
+)
+optdepends=(
+    'man-db: manual pages for stellarium'
+)
+source=(git+https://github.com/Stellarium/stellarium?signed#tag=v$pkgver)
+validpgpkeys=('79151C2E6351E7278DA1A730BF38D4D02A328DFF') # Alexander Wolf <alex.v.wolf@gmail.com>
+sha256sums=('d050cd3b689f469b1cc8846b5f4fa58bbf02f069c5726ef3b1ebfc23c050c53f')
+
+prepare() {
+  cd $_realname
+  # Fix compilation with Qt6.9
+  git cherry-pick -n bbcd60ae52b6f1395ef2390a2d2ba9d0f98db548
+  # Use systemd md4c
+  git cherry-pick -n 972c6ba72f575964fbf2049a22d51b4d1fd3983c
+  # Fix unresolved reference to function `currentPhaseFunction' with calcmysky
+  git cherry-pick -n a3ef040b6aec3e34b047aa52b8bf9aad73ac8d21
+}
+
+build() {
+  mkdir -p build-${MSYSTEM} && cd build-${MSYSTEM}
+  local cmake_options=(
+    -B build
+    -W no-dev
+    -D CMAKE_POLICY_VERSION_MINIMUM=3.5 # Necessary for CMake 4+
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=${MINGW_PREFIX}
+    -D CMAKE_C_EXTENSIONS=Yes
+    -D CMAKE_C_STANDARD=17
+    -D CMAKE_CXX_EXTENSIONS=Yes
+    -D ENABLE_QT6=1
+    ../${_realname}
+  )
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" ${MINGW_PREFIX}/bin/cmake "${cmake_options[@]}"
+  ${MINGW_PREFIX}/bin/cmake --build build --target all
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --build build --target install
+  install -vDm 644 $_realname/COPYING -t "${pkgdir}${MINGW_PREFIX}/share/licenses/$_realname"
+}
