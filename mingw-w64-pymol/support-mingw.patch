@@ -1,0 +1,172 @@
+diff --git a/contrib/uiuc/plugins/molfile_plugin/src/dtrplugin.hxx b/contrib/uiuc/plugins/molfile_plugin/src/dtrplugin.hxx
+index 87820cc1..f4912352 100644
+--- a/contrib/uiuc/plugins/molfile_plugin/src/dtrplugin.hxx
++++ b/contrib/uiuc/plugins/molfile_plugin/src/dtrplugin.hxx
+@@ -42,7 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #ifndef MOLFILE_DTRPLUGIN_HXX
+ #define MOLFILE_DTRPLUGIN_HXX
+ 
+-#if defined(_MSC_VER)
++#if defined(_WIN32)
+ #ifndef DESRES_WIN32
+ #define DESRES_WIN32
+ #endif
+diff --git a/contrib/uiuc/plugins/molfile_plugin/src/ply_c.h b/contrib/uiuc/plugins/molfile_plugin/src/ply_c.h
+index 31a7d5f9..1727aed5 100644
+--- a/contrib/uiuc/plugins/molfile_plugin/src/ply_c.h
++++ b/contrib/uiuc/plugins/molfile_plugin/src/ply_c.h
+@@ -3121,7 +3121,7 @@ void *get_new_props_ply(PlyFile *ply)
+   }
+ 
+   /* in case we need a random choice */
+-#if defined(_MSC_VER)
++#if defined(_WIN32)
+   random_pick = 0;
+ #else
+   random_pick = (int) floor (rules->nprops * drand48());
+diff --git a/layer0/strcasecmp.h b/layer0/strcasecmp.h
+index 1704e820..d4f803f8 100644
+--- a/layer0/strcasecmp.h
++++ b/layer0/strcasecmp.h
+@@ -4,7 +4,7 @@
+ 
+ #pragma once
+ 
+-#ifdef _WIN32
++#if defined(_WIN32) && defined(_MSC_VER)
+   #include <string.h>
+   #define strcasecmp(s1, s2) _stricmp(s1, s2)
+   #define strncasecmp(s1, s2, n) _strnicmp(s1, s2, n)
+diff --git a/setup.py b/setup.py
+index ec7237a8..217e0f0b 100644
+--- a/setup.py
++++ b/setup.py
+@@ -31,6 +31,13 @@ WIN = sys.platform.startswith("win")
+ MAC = sys.platform.startswith("darwin")
+ 
+ 
++# check for mingw compiler on windows
++is_mingw = False
++if WIN:
++    from distutils import ccompiler
++    is_mingw = ccompiler.get_default_compiler() == 'mingw32'
++
++
+ # Have to copy from "create_shadertext.py" script due to the use of pyproject.toml
+ # Full explanation:
+ # https://github.com/pypa/setuptools/issues/3939
+@@ -269,6 +276,10 @@ def get_prefix_path() -> list[str]:
+ 
+         paths += [sys.prefix] + paths
+ 
++    if WIN and is_mingw:
++        if os.path.isdir(sys.prefix):
++            paths.append(os.path.normpath(sys.prefix))
++
+     paths += ["/usr"]
+ 
+     return paths
+@@ -566,8 +577,9 @@ if DEBUG and not WIN:
+ 
+ libs = ["png", "freetype"]
+ lib_dirs = []
+-ext_comp_args = (
+-    [
++ext_comp_args = []
++if is_mingw or not WIN:
++    ext_comp_args.extend([
+         "-Werror=return-type",
+         "-Wunused-variable",
+         "-Wno-switch",
+@@ -576,27 +588,27 @@ ext_comp_args = (
+         "-Wno-char-subscripts",
+         # optimizations
+         "-Og" if DEBUG else "-O3",
+-    ]
+-    if not WIN
+-    else ["/MP"]
+-)
++    ])
++else:  # MSVC
++    ext_comp_args.extend([
++        "/MP",
++        "/std:c++17",
++    ])
+ ext_link_args = []
+ ext_objects = []
+ data_files = []
+ ext_modules = []
+ 
+ if options.use_openmp == "yes":
+-    def_macros += [
+-        ("PYMOL_OPENMP", None),
+-    ]
+-    if MAC:
+-        ext_comp_args += ["-Xpreprocessor", "-fopenmp"]
+-        libs += ["omp"]
+-    elif WIN:
+-        ext_comp_args += ["/openmp"]
+-    else:
+-        ext_comp_args += ["-fopenmp"]
+-        ext_link_args += ["-fopenmp"]
++    def_macros += [("PYMOL_OPENMP", None)]
++    if WIN and not is_mingw:  # MSVC
++        ext_comp_args.append("/openmp")
++    elif MAC:  # macOS Clang
++        ext_comp_args.extend(["-Xpreprocessor", "-fopenmp"])
++        libs.append("omp")
++    else:  # GCC/Clang on Linux, and MinGW on Windows
++        ext_comp_args.append("-fopenmp")
++        ext_link_args.append("-fopenmp")
+ 
+ if options.vmd_plugins:
+     # VMD plugin support
+@@ -701,14 +713,18 @@ if WIN:
+     )
+ 
+     if DEBUG:
+-        ext_comp_args += ["/Z7"]
+-        ext_link_args += ["/DEBUG"]
++        if is_mingw:
++            ext_comp_args += ["-g"]
++        else:
++            ext_comp_args += ["/Z7"]
++            ext_link_args += ["/DEBUG"]
+ 
+     libs += [
+         "opengl32",
+     ]
+-    # TODO: Remove when we move to setup-CMake
+-    ext_comp_args += ["/std:c++17"]
++    if not is_mingw:
++        # TODO: Remove when we move to setup-CMake
++        ext_comp_args += ["/std:c++17"]
+ 
+ if not (MAC or WIN):
+     libs += [
+@@ -815,9 +831,22 @@ champ_inc_dirs.append(sysconfig.get_paths()["include"])
+ champ_inc_dirs.append(sysconfig.get_paths()["platinclude"])
+ 
+ if WIN:
+-    # pyconfig.py forces linking against pythonXY.lib on MSVC
+-    py_lib = pathlib.Path(sysconfig.get_paths()["stdlib"]).parent / "libs"
+-    lib_dirs.append(str(py_lib))
++    if not is_mingw:
++        # pyconfig.py forces linking against pythonXY.lib on MSVC
++        py_lib = pathlib.Path(sysconfig.get_paths()["stdlib"]).parent / "libs"
++        lib_dirs.append(str(py_lib))
++    else:
++        ldversion = (
++            sysconfig.get_config_var("LDVERSION")
++            or f"{sys.version_info.major}.{sys.version_info.minor}"
++        )
++        libs.append(f"python{ldversion}")
++        mingw_libdir = (
++            sysconfig.get_config_var("LIBDIR")
++            or os.path.join(sys.prefix, "lib")
++        )
++        if mingw_libdir and os.path.isdir(mingw_libdir):
++            lib_dirs.append(mingw_libdir)
+ 
+ ext_modules += [
+     CMakeExtension(
