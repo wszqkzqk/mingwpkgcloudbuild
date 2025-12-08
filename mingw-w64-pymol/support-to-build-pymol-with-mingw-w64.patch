@@ -1,5 +1,19 @@
+From 3d09924d3b6c1bcdbb427d4c566bbdd155204ba3 Mon Sep 17 00:00:00 2001
+From: Zhou Qiankang <wszqkzqk@qq.com>
+Date: Sun, 23 Nov 2025 11:56:46 +0800
+Subject: [PATCH] build: support to build pymol with mingw-w64 on Windows
+
+Signed-off-by: Zhou Qiankang <wszqkzqk@qq.com>
+---
+ .../plugins/molfile_plugin/src/dtrplugin.hxx  |  2 +-
+ .../uiuc/plugins/molfile_plugin/src/ply_c.h   |  2 +-
+ layer0/strcasecmp.h                           |  2 +-
+ ov/src/ov_types.h                             |  2 +-
+ setup.py                                      | 81 +++++++++++++------
+ 5 files changed, 61 insertions(+), 28 deletions(-)
+
 diff --git a/contrib/uiuc/plugins/molfile_plugin/src/dtrplugin.hxx b/contrib/uiuc/plugins/molfile_plugin/src/dtrplugin.hxx
-index 87820cc1..f4912352 100644
+index 87820cc19..f49123525 100644
 --- a/contrib/uiuc/plugins/molfile_plugin/src/dtrplugin.hxx
 +++ b/contrib/uiuc/plugins/molfile_plugin/src/dtrplugin.hxx
 @@ -42,7 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
@@ -12,7 +26,7 @@ index 87820cc1..f4912352 100644
  #define DESRES_WIN32
  #endif
 diff --git a/contrib/uiuc/plugins/molfile_plugin/src/ply_c.h b/contrib/uiuc/plugins/molfile_plugin/src/ply_c.h
-index 31a7d5f9..1727aed5 100644
+index 31a7d5f9f..1727aed51 100644
 --- a/contrib/uiuc/plugins/molfile_plugin/src/ply_c.h
 +++ b/contrib/uiuc/plugins/molfile_plugin/src/ply_c.h
 @@ -3121,7 +3121,7 @@ void *get_new_props_ply(PlyFile *ply)
@@ -25,7 +39,7 @@ index 31a7d5f9..1727aed5 100644
  #else
    random_pick = (int) floor (rules->nprops * drand48());
 diff --git a/layer0/strcasecmp.h b/layer0/strcasecmp.h
-index 1704e820..d4f803f8 100644
+index 1704e8200..d4f803f8b 100644
 --- a/layer0/strcasecmp.h
 +++ b/layer0/strcasecmp.h
 @@ -4,7 +4,7 @@
@@ -37,11 +51,24 @@ index 1704e820..d4f803f8 100644
    #include <string.h>
    #define strcasecmp(s1, s2) _stricmp(s1, s2)
    #define strncasecmp(s1, s2, n) _strnicmp(s1, s2, n)
+diff --git a/ov/src/ov_types.h b/ov/src/ov_types.h
+index 470733852..632f52877 100644
+--- a/ov/src/ov_types.h
++++ b/ov/src/ov_types.h
+@@ -60,7 +60,7 @@ extern "C" {
+   typedef unsigned int ov_uint32;
+   typedef float ov_float32;
+   typedef double ov_float64;
+-#ifdef WIN32
++#ifdef _MSC_VER
+   typedef __int64 ov_int64;
+   typedef unsigned __int64 ov_uint64;
+ #else
 diff --git a/setup.py b/setup.py
-index ec7237a8..217e0f0b 100644
+index ec7237a86..09d0743bf 100644
 --- a/setup.py
 +++ b/setup.py
-@@ -31,6 +31,13 @@ WIN = sys.platform.startswith("win")
+@@ -31,6 +31,13 @@
  MAC = sys.platform.startswith("darwin")
  
  
@@ -66,7 +93,7 @@ index ec7237a8..217e0f0b 100644
      paths += ["/usr"]
  
      return paths
-@@ -566,8 +577,9 @@ if DEBUG and not WIN:
+@@ -566,8 +577,9 @@ def make_launch_script(self):
  
  libs = ["png", "freetype"]
  lib_dirs = []
@@ -78,7 +105,7 @@ index ec7237a8..217e0f0b 100644
          "-Werror=return-type",
          "-Wunused-variable",
          "-Wno-switch",
-@@ -576,27 +588,27 @@ ext_comp_args = (
+@@ -576,27 +588,27 @@ def make_launch_script(self):
          "-Wno-char-subscripts",
          # optimizations
          "-Og" if DEBUG else "-O3",
@@ -121,7 +148,7 @@ index ec7237a8..217e0f0b 100644
  
  if options.vmd_plugins:
      # VMD plugin support
-@@ -701,14 +713,18 @@ if WIN:
+@@ -701,14 +713,18 @@ def make_launch_script(self):
      )
  
      if DEBUG:
@@ -144,9 +171,12 @@ index ec7237a8..217e0f0b 100644
  
  if not (MAC or WIN):
      libs += [
-@@ -815,9 +831,22 @@ champ_inc_dirs.append(sysconfig.get_paths()["include"])
+@@ -814,10 +830,26 @@ def get_packages(base, parent="", r=None):
+ champ_inc_dirs.append(sysconfig.get_paths()["include"])
  champ_inc_dirs.append(sysconfig.get_paths()["platinclude"])
  
++champ_libs = []
++
  if WIN:
 -    # pyconfig.py forces linking against pythonXY.lib on MSVC
 -    py_lib = pathlib.Path(sysconfig.get_paths()["stdlib"]).parent / "libs"
@@ -161,6 +191,7 @@ index ec7237a8..217e0f0b 100644
 +            or f"{sys.version_info.major}.{sys.version_info.minor}"
 +        )
 +        libs.append(f"python{ldversion}")
++        champ_libs.append(f"python{ldversion}")
 +        mingw_libdir = (
 +            sysconfig.get_config_var("LIBDIR")
 +            or os.path.join(sys.prefix, "lib")
@@ -170,3 +201,11 @@ index ec7237a8..217e0f0b 100644
  
  ext_modules += [
      CMakeExtension(
+@@ -834,6 +866,7 @@ def get_packages(base, parent="", r=None):
+         name="chempy.champ._champ",
+         sources=get_sources(["contrib/champ"]),
+         include_dirs=champ_inc_dirs,
++        libraries=champ_libs,
+         library_dirs=lib_dirs,
+     ),
+ ]
