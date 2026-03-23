@@ -39,6 +39,7 @@ for package in "${packages[@]}"; do
     echo "::group::[build] ${package}"
     execute 'Fetch keys' "$DIR/fetch-validpgpkeys.sh"
     execute 'Update hash info' updpkgsums   #wszqkzqk: Automatically update hash info
+    exeute 'Show PKGBUILD' cat PKGBUILD
     execute 'Building binary' makepkg-mingw --noconfirm --noprogressbar --nocheck --syncdeps --rmdeps --cleanbuild
     echo "::endgroup::"
 
