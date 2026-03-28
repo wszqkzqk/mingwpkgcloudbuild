@@ -1,0 +1,39 @@
+From 9deb567ea1cc72ba29940061bf2a6fa5bd763eea Mon Sep 17 00:00:00 2001
+From: Zhou Qiankang <wszqkzqk@qq.com>
+Date: Sat, 28 Mar 2026 17:59:35 +0800
+Subject: [PATCH 2/6] Fix thread native handle cast for MinGW
+
+On MinGW, std::thread::native_handle() returns a type that requires
+an explicit cast to HANDLE for Windows API calls like SetThreadPriority.
+
+Add a conditional compilation check for __MINGW32__ to apply the
+necessary reinterpret_cast, ensuring thread priority setting works
+correctly on MinGW builds.
+
+Signed-off-by: Zhou Qiankang <wszqkzqk@qq.com>
+---
+ src/framework/global/threadutils.h | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/src/framework/global/threadutils.h b/src/framework/global/threadutils.h
+index 58a811b82a..d9fe5ab7ea 100644
+--- a/src/framework/global/threadutils.h
++++ b/src/framework/global/threadutils.h
+@@ -53,7 +53,13 @@ static bool setThreadPriority(std::thread& thread, ThreadPriority priority)
+         break;
+     }
+ 
+-    if (!SetThreadPriority(thread.native_handle(), winPriority)) {
++#if defined(__MINGW32__)
++    HANDLE nativeHandle = reinterpret_cast<HANDLE>(thread.native_handle());
++#else
++    HANDLE nativeHandle = thread.native_handle();
++#endif
++
++    if (!SetThreadPriority(nativeHandle, winPriority)) {
+         return false;
+     }
+ #else
+-- 
+2.53.0
+

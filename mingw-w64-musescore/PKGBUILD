@@ -1,0 +1,118 @@
+# Maintainer: wszqkzqk <wszqkzqk@qq.com>
+# Contributor: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: Stefan Husmann <stefan-husmann@t-online.de>
+# Contributor: Cristian Maureira <saint@archlinux.cl>
+# Contributor: Dr.Egg <rwhite@archlinux.us>
+
+_realname=musescore
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.7.1
+pkgrel=1
+pkgdesc="Create, play and print beautiful sheet music (mingw-w64)"
+arch=(any)
+mingw_arch=('ucrt64' 'mingw64' 'clang64' 'clangarm64')
+url="https://musescore.org/"
+license=(GPL-3.0-only)
+depends=(
+  ${MINGW_PACKAGE_PREFIX}-flac
+  ${MINGW_PACKAGE_PREFIX}-dlfcn
+  ${MINGW_PACKAGE_PREFIX}-harfbuzz
+  ${MINGW_PACKAGE_PREFIX}-hicolor-icon-theme
+  ${MINGW_PACKAGE_PREFIX}-freetype
+  ${MINGW_PACKAGE_PREFIX}-libopusenc
+  ${MINGW_PACKAGE_PREFIX}-libsndfile
+  ${MINGW_PACKAGE_PREFIX}-opus
+  ${MINGW_PACKAGE_PREFIX}-qt6-5compat
+  ${MINGW_PACKAGE_PREFIX}-qt6-base
+  ${MINGW_PACKAGE_PREFIX}-qt6-declarative
+  ${MINGW_PACKAGE_PREFIX}-qt6-networkauth
+  ${MINGW_PACKAGE_PREFIX}-qt6-scxml
+  ${MINGW_PACKAGE_PREFIX}-qt6-svg
+  ${MINGW_PACKAGE_PREFIX}-tinyxml2
+  ${MINGW_PACKAGE_PREFIX}-zlib
+  ${MINGW_PACKAGE_PREFIX}-zstd
+)
+makedepends=(
+  git
+  ${MINGW_PACKAGE_PREFIX}-cc
+  ${MINGW_PACKAGE_PREFIX}-cmake
+  ${MINGW_PACKAGE_PREFIX}-cppwinrt
+  ${MINGW_PACKAGE_PREFIX}-dlfcn
+  ${MINGW_PACKAGE_PREFIX}-doxygen
+  ${MINGW_PACKAGE_PREFIX}-lame
+  ${MINGW_PACKAGE_PREFIX}-ninja
+  ${MINGW_PACKAGE_PREFIX}-python
+  ${MINGW_PACKAGE_PREFIX}-qt6-tools
+  ${MINGW_PACKAGE_PREFIX}-qt6-shadertools
+  ${MINGW_PACKAGE_PREFIX}-vulkan-headers
+)
+optdepends=("${MINGW_PACKAGE_PREFIX}-lame: MP3 export")
+options=(!lto)
+source=(
+  "${_realname}::git+https://github.com/musescore/MuseScore.git#tag=v${pkgver}"
+  "0001-CMake-Enable-C-20-for-MinGW-to-support-latest-cppwin.patch"
+  "0002-Fix-thread-native-handle-cast-for-MinGW.patch"
+  "0003-global-use-WinAPI-loader-on-MinGW.patch"
+  "0004-audio-remove-variant-less-specialization-from-sequen.patch"
+  "0005-audio-rpc-avoid-inline-thread_local-buffer-linkage-i.patch"
+  "0006-audio-avoid-incomplete-type-issue-for-AudioDevicesLi.patch"
+)
+sha512sums=(
+  '5279e1b4d41a6e73545585df002831fd2251c1359620a04f9732f5fbee5e95356405efd355b731dae8e586a763ea6fa1656125a048b47a4d11c229b5cdc49571'
+  '3f20166f4f10e696240e2ac656362f299fc9ceabfbc1d579b37ddd7bb68ae4c486cc3fc8691794b899fdddcda1af10a859dde0e32d6a5f3436a1e57d8644b296'
+  'f3c8be668f4f1a887b10ad920b3bc674324a9cbd2e1a2262c107890c3d9450b8a6647c81d61e6fd5e44eb551603938115b74921b1f8e8a4202542a499dcf5def'
+  'a4d84814967fb8068e04c543758ab0c2e0a2ad3f2a79c54ad8e329da6f88e83a16929b9ab1af37826908992b9e502ab7ab3a6c2607796a0afb4199c2b782678b'
+  'f7a2fe049d1dfde74ac521f9d5e14d58ad44d372b2fd887f3cd5404ab90373f3fd3ec5df11d344f2514b7fb2551ed4c4492f966ff73ac3384acb4d9f79cdac16'
+  'eea66c4ee097ceca4d60f0b88ac98e5f0246f9507b85d3dbd517a2970a87cac9d5d7b1a8d1dcb38308f7b4dcec784bfe36ee62ceecca165c2bc93acc67b91832'
+  'e4c40c5b67edf9d163362ac08daf2e9924f50d716fafdd2ccc520a152eaa418f9bd3b988e7b0fd4a4e82d27fdc1b7867f11a522132215642462fc1fe0e36587b'
+)
+
+prepare() {
+  local -a patchset=(
+    "0001-CMake-Enable-C-20-for-MinGW-to-support-latest-cppwin.patch"
+    "0002-Fix-thread-native-handle-cast-for-MinGW.patch"
+    "0003-global-use-WinAPI-loader-on-MinGW.patch"
+    "0004-audio-remove-variant-less-specialization-from-sequen.patch"
+    "0005-audio-rpc-avoid-inline-thread_local-buffer-linkage-i.patch"
+    "0006-audio-avoid-incomplete-type-issue-for-AudioDevicesLi.patch"
+  )
+
+  for p in "${patchset[@]}"; do
+    patch -Np1 -i "${srcdir}/${p}" -d "${srcdir}/${_realname}"
+  done
+}
+
+build() {
+  declare -a extra_config
+  if check_option "debug" "n"; then
+    extra_config+=("-DCMAKE_BUILD_TYPE=Release")
+  else
+    extra_config+=("-DCMAKE_BUILD_TYPE=Debug")
+  fi
+
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    cmake \
+      -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX} \
+      -Wno-dev \
+      -D MUSE_APP_BUILD_MODE=release \
+      -D MUSESCORE_BUILD_CONFIGURATION=app \
+      -D MUSESCORE_REVISION="$(git -C "$_realname" rev-parse --short=7 HEAD)" \
+      -D MUE_COMPILE_USE_SYSTEM_FLAC=ON \
+      -D MUE_COMPILE_USE_SYSTEM_FREETYPE=ON \
+      -D MUE_COMPILE_USE_SYSTEM_HARFBUZZ=ON \
+      -D MUE_COMPILE_USE_SYSTEM_OPUS=ON \
+      -D MUE_COMPILE_USE_SYSTEM_OPUSENC=ON \
+      -D MUE_COMPILE_USE_SYSTEM_TINYXML=ON \
+      -D MUE_INSTALL_SOUNDFONT=ON \
+      "${extra_config[@]}" \
+      -S "${_realname}" \
+      -B "build-${MSYSTEM}"
+
+  cmake --build "build-${MSYSTEM}"
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install "build-${MSYSTEM}"
+  install -vDm 644 "${srcdir}/${_realname}/LICENSE.txt" -t "${pkgdir}${MINGW_PREFIX}/share/licenses/$_realname"
+}

@@ -1,0 +1,109 @@
+--- a/src/importexport/mnx/CMakeLists.txt
++++ b/src/importexport/mnx/CMakeLists.txt
+@@ -13,7 +13,7 @@ if(MUE_COMPILE_USE_SYSTEM_MNXDOM)
+     find_package(PkgConfig REQUIRED)
+     pkg_check_modules(mnxdom REQUIRED IMPORTED_TARGET mnxdom)
+     set(MNXDOM_LIB PkgConfig::mnxdom)
+-    target_compile_definitions(iex_mnx PRIVATE MNXDOM_SYSTEM)
++    target_compile_definitions(iex_mnx PUBLIC -DMNXDOM_SYSTEM=1)
+     message(STATUS "Using system-installed mnxdom")
+ else()
+     FetchContent_Declare(
+--- a/src/importexport/mnx/internal/export/mnxexporter.h
++++ b/src/importexport/mnx/internal/export/mnxexporter.h
+@@ -25,11 +25,7 @@
+ #include <unordered_set>
+ #include <vector>
+ 
+-#ifdef MNXDOM_SYSTEM
+ #include <mnxdom/mnxdom.h>
+-#else
+-#include "mnxdom.h"
+-#endif
+ #include "types/ret.h"
+ 
+ #include "engraving/types/types.h"
+--- a/src/importexport/mnx/internal/import/mnximporter.h
++++ b/src/importexport/mnx/internal/import/mnximporter.h
+@@ -28,11 +28,7 @@
+ #include "engraving/types/propertyvalue.h"
+ #include "engraving/types/types.h"
+ 
+-#ifdef MNXDOM_SYSTEM
+ #include <mnxdom/mnxdom.h>
+-#else
+-#include "mnxdom.h"
+-#endif
+ 
+ namespace mu::engraving {
+ class Chord;
+--- a/src/importexport/mnx/internal/import/mnximportmarkings.cpp
++++ b/src/importexport/mnx/internal/import/mnximportmarkings.cpp
+@@ -36,11 +36,7 @@
+ #include "engraving/types/symid.h"
+ #include "log.h"
+ 
+-#ifdef MNXDOM_SYSTEM
+ #include <mnxdom/mnxdom.h>
+-#else
+-#include "mnxdom.h"
+-#endif
+ 
+ using namespace mu::engraving;
+ 
+--- a/src/importexport/mnx/internal/import/mnximportpartmeasures.cpp
++++ b/src/importexport/mnx/internal/import/mnximportpartmeasures.cpp
+@@ -55,11 +55,7 @@
+ #include "engraving/dom/tuplet.h"
+ #include "engraving/dom/volta.h"
+ 
+-#ifdef MNXDOM_SYSTEM
+ #include <mnxdom/mnxdom.h>
+-#else
+-#include "mnxdom.h"
+-#endif
+ 
+ using namespace mu::engraving;
+ 
+--- a/src/importexport/mnx/internal/notationmnxreader.cpp
++++ b/src/importexport/mnx/internal/notationmnxreader.cpp
+@@ -29,11 +29,7 @@
+ #include "io/file.h"
+ #include "log.h"
+ 
+-#ifdef MNXDOM_SYSTEM
+ #include <mnxdom/mnxdom.h>
+-#else
+-#include "mnxdom.h"
+-#endif
+ 
+ using namespace mu::iex::mnxio;
+ using namespace mu::engraving;
+--- a/src/importexport/mnx/internal/shared/mnxtypesconv.h
++++ b/src/importexport/mnx/internal/shared/mnxtypesconv.h
+@@ -28,11 +28,7 @@
+ #include "engraving/dom/tuplet.h"
+ #include "engraving/types/types.h"
+ 
+-#ifdef MNXDOM_SYSTEM
+ #include <mnxdom/mnxdom.h>
+-#else
+-#include "mnxdom.h"
+-#endif
+ 
+ namespace mu::engraving {
+ struct Interval;
+--- a/src/importexport/mnx/tests/mnx_tests.cpp
++++ b/src/importexport/mnx/tests/mnx_tests.cpp
+@@ -54,11 +54,7 @@
+ #include "types/ret.h"
+ #include "engraving/rw/rwregister.h"
+ 
+-#ifdef MNXDOM_SYSTEM
+ #include <mnxdom/mnxdom.h>
+-#else
+-#include "mnxdom.h"
+-#endif
+ 
+ using namespace mu::engraving;
+ using namespace mu::iex::mnxio;

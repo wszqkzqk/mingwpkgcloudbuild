@@ -1,0 +1,106 @@
+From 70cf2dee5715c74c13b0ba5d9d0d1ea1e17baaf8 Mon Sep 17 00:00:00 2001
+From: Zhou Qiankang <wszqkzqk@qq.com>
+Date: Sat, 28 Mar 2026 19:22:59 +0800
+Subject: [PATCH 4/6] audio: remove variant less specialization from sequencer
+ path
+
+---
+ .../worker/internal/abstracteventsequencer.h  |  7 ++--
+ .../internal/musesamplersequencer.h           | 42 -------------------
+ 2 files changed, 4 insertions(+), 45 deletions(-)
+
+diff --git a/src/framework/audio/worker/internal/abstracteventsequencer.h b/src/framework/audio/worker/internal/abstracteventsequencer.h
+index baf1467c32..34e251e2e1 100644
+--- a/src/framework/audio/worker/internal/abstracteventsequencer.h
++++ b/src/framework/audio/worker/internal/abstracteventsequencer.h
+@@ -25,6 +25,7 @@
+ 
+ #include <map>
+ #include <set>
++#include <vector>
+ 
+ #include "global/async/asyncable.h"
+ #include "mpe/events.h"
+@@ -38,7 +39,7 @@ class AbstractEventSequencer : public async::Asyncable
+ {
+ public:
+     using EventType = std::variant<Types...>;
+-    using EventSequence = std::set<EventType>;
++    using EventSequence = std::vector<EventType>;
+     using EventSequenceMap = std::map<msecs_t, EventSequence>;
+ 
+     typedef typename EventSequenceMap::const_iterator SequenceIterator;
+@@ -237,7 +238,7 @@ protected:
+         while (m_currentMainSequenceIt != m_mainStreamEvents.end()
+                && m_currentMainSequenceIt->first <= m_playbackPosition) {
+             EventSequence& sequence = result[m_currentMainSequenceIt->first];
+-            sequence.insert(m_currentMainSequenceIt->second.cbegin(),
++            sequence.insert(sequence.end(), m_currentMainSequenceIt->second.cbegin(),
+                             m_currentMainSequenceIt->second.cend());
+             m_currentMainSequenceIt = std::next(m_currentMainSequenceIt);
+         }
+@@ -252,7 +253,7 @@ protected:
+         while (m_currentOffSequenceIt != m_offStreamEvents.end()
+                && m_currentOffSequenceIt->first <= m_offstreamPosition) {
+             EventSequence& sequence = result[m_currentOffSequenceIt->first];
+-            sequence.insert(std::make_move_iterator(m_currentOffSequenceIt->second.begin()),
++            sequence.insert(sequence.end(), std::make_move_iterator(m_currentOffSequenceIt->second.begin()),
+                             std::make_move_iterator(m_currentOffSequenceIt->second.end()));
+             m_currentOffSequenceIt = m_offStreamEvents.erase(m_currentOffSequenceIt);
+         }
+diff --git a/src/framework/musesampler/internal/musesamplersequencer.h b/src/framework/musesampler/internal/musesamplersequencer.h
+index 0b49c706af..c563aea9d0 100644
+--- a/src/framework/musesampler/internal/musesamplersequencer.h
++++ b/src/framework/musesampler/internal/musesamplersequencer.h
+@@ -27,48 +27,6 @@
+ #include "internal/apitypes.h"
+ #include "internal/libhandler.h"
+ 
+-typedef typename std::variant<muse::mpe::NoteEvent,
+-                              muse::musesampler::AuditionStartNoteEvent,
+-                              muse::musesampler::AuditionStopNoteEvent,
+-                              muse::musesampler::AuditionCCEvent> MuseSamplerEvent;
+-
+-template<>
+-struct std::less<MuseSamplerEvent>
+-{
+-    bool operator()(const MuseSamplerEvent& first,
+-                    const MuseSamplerEvent& second) const
+-    {
+-        if (first.index() != second.index()) {
+-            return first.index() < second.index();
+-        }
+-
+-        if (std::holds_alternative<muse::musesampler::AuditionStartNoteEvent>(first)) {
+-            const auto& e1 = std::get<muse::musesampler::AuditionStartNoteEvent>(first);
+-            const auto& e2 = std::get<muse::musesampler::AuditionStartNoteEvent>(second);
+-            if (e1.msEvent._pitch == e2.msEvent._pitch) {
+-                return e1.msEvent._offset_cents < e2.msEvent._offset_cents;
+-            }
+-            return e1.msEvent._pitch < e2.msEvent._pitch;
+-        }
+-
+-        if (std::holds_alternative<muse::musesampler::AuditionStopNoteEvent>(first)) {
+-            return std::get<muse::musesampler::AuditionStopNoteEvent>(first).msEvent._pitch
+-                   < std::get<muse::musesampler::AuditionStopNoteEvent>(second).msEvent._pitch;
+-        }
+-
+-        if (std::holds_alternative<muse::musesampler::AuditionCCEvent>(first)) {
+-            const auto& e1 = std::get<muse::musesampler::AuditionCCEvent>(first);
+-            const auto& e2 = std::get<muse::musesampler::AuditionCCEvent>(second);
+-            if (e1.cc == e2.cc) {
+-                return e1.value < e2.value;
+-            }
+-            return e1.cc < e2.cc;
+-        }
+-
+-        return false;
+-    }
+-};
+-
+ namespace muse::musesampler {
+ class MuseSamplerSequencer : public audio::worker::AbstractEventSequencer<mpe::NoteEvent, AuditionStartNoteEvent, AuditionStopNoteEvent,
+                                                                           AuditionCCEvent>
+-- 
+2.53.0
+

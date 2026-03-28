@@ -1,0 +1,39 @@
+From 8e1d35a85a27691bebc17a188109f90691755834 Mon Sep 17 00:00:00 2001
+From: Zhou Qiankang <wszqkzqk@qq.com>
+Date: Sat, 28 Mar 2026 19:23:00 +0800
+Subject: [PATCH 5/6] audio/rpc: avoid inline thread_local buffer linkage issue
+
+---
+ src/framework/audio/common/rpc/rpcpacker.h | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/src/framework/audio/common/rpc/rpcpacker.h b/src/framework/audio/common/rpc/rpcpacker.h
+index db33e30bfa..7726c50f40 100644
+--- a/src/framework/audio/common/rpc/rpcpacker.h
++++ b/src/framework/audio/common/rpc/rpcpacker.h
+@@ -592,6 +592,8 @@ public:
+     template<class ... Types>
+     static ByteArray pack(const Options& opt, const Types&... args)
+     {
++        auto& buffer = rpcBuffer();
++
+         // clear but keep capacity
+         buffer.clear();
+         // makes sense if the reserve is greater than the current capacity
+@@ -618,6 +620,12 @@ public:
+     }
+ 
+     static constexpr size_t DEFAULT_CAPACITY = 1024 * 200;
+-    static inline thread_local std::vector<uint8_t> buffer = {};
++
++private:
++    static std::vector<uint8_t>& rpcBuffer()
++    {
++        static thread_local std::vector<uint8_t> buffer {};
++        return buffer;
++    }
+ };
+ }
+-- 
+2.53.0
+

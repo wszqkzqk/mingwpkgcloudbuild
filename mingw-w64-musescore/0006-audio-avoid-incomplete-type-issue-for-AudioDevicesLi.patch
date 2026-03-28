@@ -1,0 +1,26 @@
+From 1033716be4d0d2173ec50bdb94ac4919fe223ad0 Mon Sep 17 00:00:00 2001
+From: Zhou Qiankang <wszqkzqk@qq.com>
+Date: Sat, 28 Mar 2026 19:24:36 +0800
+Subject: [PATCH 6/6] audio: avoid incomplete type issue for
+ AudioDevicesListener on MinGW
+
+---
+ src/framework/audio/driver/platform/win/wasapiaudiodriver.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/framework/audio/driver/platform/win/wasapiaudiodriver.h b/src/framework/audio/driver/platform/win/wasapiaudiodriver.h
+index 65e9564c28..e7deaed572 100644
+--- a/src/framework/audio/driver/platform/win/wasapiaudiodriver.h
++++ b/src/framework/audio/driver/platform/win/wasapiaudiodriver.h
+@@ -82,7 +82,7 @@ private:
+     mutable std::mutex m_availableOutputDevicesMutex;
+     mutable AudioDeviceList m_availableOutputDevices;
+ 
+-    std::unique_ptr<AudioDevicesListener> m_devicesListener;
++    std::shared_ptr<AudioDevicesListener> m_devicesListener;
+ 
+     async::Notification m_outputDeviceChanged;
+     async::Notification m_availableOutputDevicesChanged;
+-- 
+2.53.0
+

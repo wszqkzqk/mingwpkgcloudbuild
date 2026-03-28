@@ -1,0 +1,125 @@
+--- a/src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/FamilyView.qml
++++ b/src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/FamilyView.qml
+@@ -82,3 +82,7 @@ Item {
+-        navigation.name: "genreBox"
+-        navigation.panel: groupsView.navigation
+-        navigation.row: 1
++        Component.onCompleted: {
++            if (navigation) {
++                navigation.name = "genreBox"
++                navigation.panel = groupsView.navigation
++                navigation.row = 1
++            }
++        }
+--- a/src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/InstrumentsOnScoreView.qml
++++ b/src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/InstrumentsOnScoreView.qml
+@@ -66,4 +66,8 @@ Item {
+-            navigation.name: "Orders"
+-            navigation.panel: instrumentsView.navigation
+-            navigation.row: 0
+-            navigation.column: 0
++            Component.onCompleted: {
++                if (navigation) {
++                    navigation.name = "Orders"
++                    navigation.panel = instrumentsView.navigation
++                    navigation.row = 0
++                    navigation.column = 0
++                }
++            }
+--- a/src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/InstrumentsView.qml
++++ b/src/instrumentsscene/qml/MuseScore/InstrumentsScene/internal/InstrumentsView.qml
+@@ -138,6 +138,16 @@ Item {
+-                navigation.name: "TraitsBox"
+-                navigation.panel: instrumentsView.navigation
+-                navigation.row: item.navigation.row
+-                navigation.column: 1
+-                navigation.accessible.name: itemTitleLabel.text + " " + qsTrc("instruments", "traits")
+-                navigation.accessible.row: item.index
++                Component.onCompleted: {
++                    if (label) {
++                        label.anchors.leftMargin = 8
++                    }
++                    if (dropIcon) {
++                        dropIcon.anchors.rightMargin = 4
++                    }
++                    if (navigation) {
++                        navigation.name = "TraitsBox"
++                        navigation.panel = instrumentsView.navigation
++                        navigation.row = item.navigation.row
++                        navigation.column = 1
++                        navigation.accessible.name = itemTitleLabel.text + " " + qsTrc("instruments", "traits")
++                        navigation.accessible.row = item.index
++                    }
++                }
+@@ -152,2 +161,0 @@ Item {
+-                label.anchors.leftMargin: 8
+-                dropIcon.anchors.rightMargin: 4
+--- a/src/project/qml/MuseScore/Project/internal/NewScore/MeasuresSettings.qml
++++ b/src/project/qml/MuseScore/Project/internal/NewScore/MeasuresSettings.qml
+@@ -52 +52 @@ FlatButton {
+-                return qsTrc("project/newscore", "pickup:") + " " +
++                return root.model ? qsTrc("project/newscore", "pickup:") + " " +
+@@ -53,0 +54 @@ FlatButton {
++                                  : ""
+@@ -60 +61 @@ FlatButton {
+-        text: qsTrc("project/newscore", "%Ln measure(s),", "", root.model.measureCount) + "\n" + pickupMessage
++        text: qsTrc("project/newscore", "%Ln measure(s),", "", root.model ? root.model.measureCount : 0) + "\n" + pickupMessage
+@@ -101 +102 @@ FlatButton {
+-                checked: root.model.withPickupMeasure
++                checked: root.model ? root.model.withPickupMeasure : false
+@@ -111 +112,3 @@ FlatButton {
+-                    root.model.withPickupMeasure = !checked
++                    if (root.model) {
++                        root.model.withPickupMeasure = !checked
++                    }
+@@ -121,3 +124,3 @@ FlatButton {
+-                numerator: root.model.pickupTimeSignature.numerator
+-                denominator: root.model.pickupTimeSignature.denominator
+-                availableDenominators: root.model.timeSignatureDenominators()
++                numerator: root.model ? root.model.pickupTimeSignature.numerator : 1
++                denominator: root.model ? root.model.pickupTimeSignature.denominator : 4
++                availableDenominators: root.model ? root.model.timeSignatureDenominators() : []
+@@ -130 +133,3 @@ FlatButton {
+-                    root.model.setPickupTimeSignatureNumerator(value)
++                    if (root.model) {
++                        root.model.setPickupTimeSignatureNumerator(value)
++                    }
+@@ -134 +139,3 @@ FlatButton {
+-                    root.model.setPickupTimeSignatureDenominator(value)
++                    if (root.model) {
++                        root.model.setPickupTimeSignatureDenominator(value)
++                    }
+@@ -161 +168 @@ FlatButton {
+-                currentValue: root.model.measureCount
++                currentValue: root.model ? root.model.measureCount : 0
+@@ -164,2 +171,2 @@ FlatButton {
+-                maxValue: root.model.measureCountRange().max
+-                minValue: root.model.measureCountRange().min
++                maxValue: root.model ? root.model.measureCountRange().max : 1
++                minValue: root.model ? root.model.measureCountRange().min : 1
+@@ -178 +185,3 @@ FlatButton {
+-                    root.model.measureCount = newValue
++                    if (root.model) {
++                        root.model.measureCount = newValue
++                    }
+--- a/src/project/qml/MuseScore/Project/internal/NewScore/TimeSignatureFraction.qml
++++ b/src/project/qml/MuseScore/Project/internal/NewScore/TimeSignatureFraction.qml
+@@ -39 +39 @@ Row {
+-    property int navigationPanelOrderEnd: timeComboBox.navigation.panel.order
++    property int navigationPanelOrderEnd: timeComboBox.denominatorNavigationPanel.order
+@@ -83,2 +83 @@ Row {
+-        navigation.name: "TimeBox"
+-        navigation.panel: NavigationPanel {
++        property NavigationPanel denominatorNavigationPanel: NavigationPanel {
+@@ -89 +88,7 @@ Row {
+-        navigation.row: 0
++        Component.onCompleted: {
++            if (navigation) {
++                navigation.name = "TimeBox"
++                navigation.panel = denominatorNavigationPanel
++                navigation.row = 0
++            }
++        }
+@@ -96 +101 @@ Row {
+-            var denominators = root.availableDenominators
++            var denominators = root.availableDenominators || []

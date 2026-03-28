@@ -1,0 +1,36 @@
+From 92fcd6b83ab082c41fd4963f83575dcbe89ae0b2 Mon Sep 17 00:00:00 2001
+From: Zhou Qiankang <wszqkzqk@qq.com>
+Date: Sat, 28 Mar 2026 13:20:18 +0800
+Subject: [PATCH 1/6] CMake: Enable C++20 for MinGW to support latest cppwinrt
+
+The latest cppwinrt in MSYS2 / MinGW requires <coroutine> support
+(and thus C++20) for compilation. MSVC naturally bypasses or
+suppresses this in standard builds, but Clang/GCC under MinGW
+explicitly fails on wininteractivehelper.cpp and other files
+including <winrt/Windows.System.h>.
+
+Enabling C++20 for MINGW conditionally fixes this issue while
+keeping other platforms on C++17.
+
+Signed-off-by: Zhou Qiankang <wszqkzqk@qq.com>
+---
+ CMakeLists.txt | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 83a7a20376..880236c629 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -23,6 +23,9 @@ cmake_minimum_required(VERSION 3.22) # Min. required by Qt 6.9
+ project(MuseScore LANGUAGES C CXX)
+ 
+ set(CMAKE_CXX_STANDARD 17)
++if (MINGW)
++    set(CMAKE_CXX_STANDARD 20)
++endif()
+ set(CMAKE_CXX_STANDARD_REQUIRED ON)
+ 
+ set(CMAKE_INCLUDE_CURRENT_DIR ON)
+-- 
+2.53.0
+
