@@ -9,55 +9,64 @@ on:
   workflow_dispatch:
 
 jobs:
-  update-srcinfo:
+  update-srcinfo-win:
     runs-on: windows-2022
     if: ${{ github.repository == 'wszqkzqk/mingwpkgcloudbuild' || github.event_name == 'workflow_dispatch' }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
+          filter: tree:0
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        id: setup-python
         with:
-          python-version: '3.9'
+          python-version: '3.12'
 
-      - uses: msys2/setup-msys2@v2
+      - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+        with:
+          cache-dependency-glob: .github/workflows/generate-srcinfo.yml
+
+      - name: Install dependencies
+        run: |
+          uv tool install --python '${{ steps.setup-python.outputs.python-path }}' 'msys2-devtools[srcinfo-cache] @ git+https://github.com/msys2/msys2-devtools'
+
+      - uses: msys2/setup-msys2@cafece8e6baf9247cf9b1bf95097b0b983cc558d # v2.31.0
+        id: msys2
         with:
           msystem: MSYS
           update: true
 
-      - name: Download srcinfo.json and set up the environment
+      - name: Download srcinfo.json.gz and set up the environment
         shell: msys2 {0}
         run: |
-          # XXX: linting PKGBUILDs takes a loooong time, this skips it
-          sed -i s/^lint_pkgbuild/#lint_pkgbuild/g /usr/bin/makepkg
           # makepkg requires strip in PATH even if it wont be used
           touch /usr/bin/strip.exe
-          curl --fail -L --retry 5 -o srcinfo.json "https://github.com/$GITHUB_REPOSITORY/releases/download/srcinfo-cache/srcinfo.json"
+          curl --fail -L --retry 5 -o srcinfo.json.gz "https://github.com/$GITHUB_REPOSITORY/releases/download/srcinfo-cache/srcinfo.json.gz"
 
-      - name: Parse PKGBUILDs and update srcinfo.json
+      - name: Parse PKGBUILDs and update srcinfo.json.gz
         run: |
-          $MSYS2_ROOT=(msys2 -c 'cygpath -w /')
-          python -u .ci/ci-generate-srcinfo.py --time-limit 19800 mingw "$MSYS2_ROOT" . srcinfo.json
+          msys2-srcinfo-cache --time-limit 19800 mingw '${{ steps.msys2.outputs.msys2-location }}' . srcinfo.json.gz
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: result
-          path: srcinfo.json
+          name: result-win
+          path: |
+            srcinfo.json.gz
 
   upload-srcinfo:
-    needs: update-srcinfo
+    needs: update-srcinfo-win
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: result
+          name: result-win
 
-      - name: Upload srcinfo.json
+      - name: Upload srcinfo.json.gz
         run: |
-          gh release upload srcinfo-cache srcinfo.json --clobber --repo "$GITHUB_REPOSITORY"
+          gh release upload srcinfo-cache srcinfo.json.gz --clobber --repo "$GITHUB_REPOSITORY"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

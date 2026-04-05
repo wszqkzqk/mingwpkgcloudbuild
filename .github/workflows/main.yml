@@ -24,37 +24,42 @@ jobs:
     name: ${{ matrix.msystem }}
     runs-on: ${{ matrix.runner }}
     steps:
-      - name: Get CPU Name
-        run : |
+      - name: Gather Facts
+        id: facts
+        run: |
+          Get-PSDrive -PSProvider FileSystem | Format-Table -AutoSize -Wrap
           Get-CIMInstance -Class Win32_Processor | Select-Object -Property Name
+          Get-CIMInstance Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum | Format-Table @{n="TotalPhysicalMemory";e={$_.Sum}}
 
-      - uses: actions/checkout@v2
+      - name: Configure Pagefile
+        # https://github.com/al-cheb/configure-pagefile-action/issues/16
+        continue-on-error: true
+        uses: al-cheb/configure-pagefile-action@9b6da52fb72a3c6147c1aad2df22d8d905681adc # v1.5
+        with:
+          minimum-size: 4GB
+          maximum-size: 16GB
+          # Needs to be C:, see https://github.com/al-cheb/configure-pagefile-action/issues/18
+          disk-root: "C:"
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           path: temp
           fetch-depth: 0
+          filter: blob:none
           persist-credentials: false
 
-      # to match the autobuild environment
-      - uses: actions/setup-python@v2
+      - uses: msys2/setup-msys2@cafece8e6baf9247cf9b1bf95097b0b983cc558d # v2.31.0
         with:
-          python-version: '3.8'
-          architecture: 'x64'
-
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: ${{ contains(matrix.msystem, 'ARM64') && 'MSYS' || matrix.msystem }}
-          install: git python base-devel pactoys
+          msystem: ${{ matrix.msystem }}
+          install: git python base-devel
           update: true
-          release: ${{ runner.arch != 'ARM64' }}
           location: 'D:\M'
 
       - name: Add staging repo
         shell: msys2 {0}
         run: |
           cp /etc/pacman.conf /etc/pacman.conf.bak
-          grep -qF '[clang32]' /etc/pacman.conf || sed -i '1s|^|[clang32]\nInclude = /etc/pacman.d/mirrorlist.mingw\n|' /etc/pacman.conf
-          grep -qF '[clangarm64]' /etc/pacman.conf || sed -i '1s|^|[clangarm64]\nInclude = /etc/pacman.d/mirrorlist.mingw\n|' /etc/pacman.conf
-          sed -i '1s|^|[staging]\nServer = https://repo.msys2.org/staging/\nSigLevel = Never\n|' /etc/pacman.conf
+          grep -qFx '[staging]' /etc/pacman.conf || sed -i '/^# \[staging\]/,/^$/ s|^# ||g' /etc/pacman.conf
 
       - name: Update using staging
         run: |

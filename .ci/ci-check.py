@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -11,14 +12,22 @@ import tempfile
 import textwrap
 import typing
 from contextlib import contextmanager
+from functools import cache
 from pathlib import Path
 from sys import stdout
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import pacdb  # type: ignore[import-not-found]
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__file__)
 
-TEMP_REPO_PATH = ARTIFACTS_LOCATION = Path("C:/_/artifacts")
+TEMP_REPO_PATH: Path = Path()
+ARTIFACTS_LOCATION: Path = Path()
 RDEPS_REGEX = re.compile(r"Repository\s*: \s*[\n\S\s]*\nRequired By\s*:\s*(?P<rdeps>[\s\S]*)Optional For\s*:\s*")
+OPTIONS_REGEX = re.compile(r"options=\((?P<options>[\S ]*)\)")
+REPO_ROOT = Path(__file__).parent.parent
 
 
 def convert_win2unix_path(winpath: typing.Union[Path, str]):
@@ -39,6 +48,12 @@ def get_msys2_root():
         check=True,
     )
     return p.stdout.strip()
+
+
+@cache
+def get_pacdb_database():
+    import pacdb  # type: ignore[import-not-found]
+    return pacdb.Database("ci", TEMP_REPO_PATH / "ci.files.tar.gz")
 
 
 def create_and_add_to_repo(pkgs: typing.List[Path]) -> None:
@@ -83,6 +98,8 @@ def install_package(pkg: typing.Union[typing.List[str], Path]) -> typing.Generat
             "--refresh",
             "--sync",
             "--noconfirm",
+            "--needed",
+            "mingw-w64-ucrt-x86_64-python-pip",
             get_pkg_name(pkg),
         ]
         uninstall_command = [
@@ -100,6 +117,8 @@ def install_package(pkg: typing.Union[typing.List[str], Path]) -> typing.Generat
                 "--sync",
                 "--refresh",
                 "--noconfirm",
+                "--needed",
+                "mingw-w64-ucrt-x86_64-python-pip",
                 *pkg,
             ]
             uninstall_command = [
@@ -184,18 +203,85 @@ def gha_group(title: str) -> typing.Generator:
         stdout.flush()
 
 
+def gha_error(filename: Path, title: str, message: str) -> None:
+    print(f"::error file={filename.relative_to(REPO_ROOT).as_posix()},title={title}::{message}")
+    stdout.flush()
+
+
 def get_pkg_name(pkgloc: Path):
     return "-".join(pkgloc.name.split("-")[:-3])
 
 
+def get_pkgbuild_file(pkg_name: str) -> Path:
+    db = get_pacdb_database()
+    pkg = db.get_pkg(pkg_name)
+    pkg_base = pkg.base
+    return REPO_ROOT / pkg_base / "PKGBUILD"
+
+
+def check_strip_disabled_for_pkg(pkg_name: str) -> bool:
+    pkgbuild_file = get_pkgbuild_file(pkg_name)
+    if not pkgbuild_file.exists():
+        raise ValueError(
+            f"Unable to find PKGBUILD for {pkg_name}: tried {pkgbuild_file}"
+        )
+    with open(pkgbuild_file, "r", encoding="utf-8") as h:
+        text = h.read()
+        # find for options using OPTIONS_REGEX
+        options = OPTIONS_REGEX.search(text)
+        if options:
+            options = options.group("options")
+            if "!strip" in options:
+                return True
+    return False
+
+
+def check_whether_using_python_installer(pkg_name: str) -> bool:
+    db = get_pacdb_database()
+    pkg = db.get_pkg(pkg_name)
+    if pkg is None:
+        raise ValueError(f"Unable to find {pkg_name} in the database.")
+    return "mingw-w64-ucrt-x86_64-python-installer" in pkg.makedepends
+
+
+def check_whether_files_in_bin_folder(pkg_name: str) -> bool:
+    db = get_pacdb_database()
+    return any(i.startswith("ucrt64/bin") and i.endswith(".exe") for i in db.get_pkg(pkg_name).files)
+
+
 def main() -> None:
     create_and_add_to_repo(list(ARTIFACTS_LOCATION.glob("*.pkg.tar.*")))
+
+    # iterate through all the packages and check if they are using python-installer
+    # in which case iterate through the files in the package and check if there's anything
+    # in the ucrt64/bin folder. If there is, then check whether strip is disabled.
+    exit_code = 0
+    for pkg_loc in ARTIFACTS_LOCATION.glob("*.pkg.tar.*"):
+        pkg_name = get_pkg_name(pkg_loc)
+        if check_whether_using_python_installer(pkg_name):
+            if check_whether_files_in_bin_folder(pkg_name):
+                if not check_strip_disabled_for_pkg(pkg_name):
+                    gha_error(
+                        get_pkgbuild_file(pkg_name),
+                        "Strip option is not disabled",
+                        f"Package `{pkg_name}` is using `python-installer` and has executables "
+                        "but strip option is not disabled in the PKGBUILD.",
+                    )
+                    exit_code = 1
+
+    if exit_code != 0:
+        sys.exit(exit_code)
+    
+    print("Strip option check is done.")
+
     for pkgloc in ARTIFACTS_LOCATION.glob("*.pkg.tar.*"):
         with install_package(pkgloc):
             pkgname = get_pkg_name(pkgloc)
+            with gha_group(f"Pip Output (without reverse dependencies): {pkgloc.name}"):
+                run_pip_check(pkgname)
             rdeps = get_rdeps(pkgname)
             with install_package(rdeps):
-                with gha_group(f"Pip Output: {pkgloc.name}"):
+                with gha_group(f"Pip Output (with reverse dependencies): {pkgloc.name}"):
                     run_pip_check(pkgname)
 
 
@@ -206,7 +292,7 @@ def check_whether_we_should_run() -> bool:
         pkgname = "-".join(pkgloc.name.split("-")[:-3])
         if "-python-" in pkgname:
             return True
-        elif pkgname == "mingw-w64-x86_64-python":
+        elif pkgname == "mingw-w64-ucrt-x86_64-python":
             return False
     # now this is compilcated
     # need to find file listing in the package.
@@ -222,7 +308,7 @@ def check_whether_we_should_run() -> bool:
             with open(Path(tempdir, pkgloc.stem), "rb") as file:
                 with tarfile.open(fileobj=file, mode="r") as tar:
                     for mem in tar.getmembers():
-                        if "mingw64/lib/python" in mem.name:
+                        if "ucrt64/lib/python" in mem.name:
                             return True
     return False
 
@@ -236,13 +322,28 @@ if __name__ == "__main__":
         dest="run",
         action="store_true",
     )
+    parser.add_argument(
+        "directory",
+        help="Directory containing the artifacts.",
+        type=Path,
+    )
     args = parser.parse_args()
+    TEMP_REPO_PATH = ARTIFACTS_LOCATION = args.directory.resolve()
+
     if args.run:
         res = check_whether_we_should_run()
+
+        _op_file = sys.stdout
+        _file_name = os.environ.get("GITHUB_OUTPUT")
+        if _file_name:
+            _op_file = open(_file_name, "a")
         if res:
-            print("::set-output name=run::true")
+            print("run=true", file=_op_file)
         else:
-            print("::set-output name=run::false")
+            print("run=false", file=_op_file)
+        if _op_file is not sys.stdout:
+            _op_file.close()
+
         sys.exit(0)
     else:
         main()
